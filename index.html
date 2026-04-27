@@ -1,381 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Communicator Firebase</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Communicator</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-body{background:#0f172a;color:#fff;min-height:100vh}
-.app{min-height:100vh;display:flex;flex-direction:column}
-.header{padding:16px 22px;background:#020617;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.header h1{font-size:24px;color:#e5e7eb}.header span{color:#94a3b8;font-size:14px}.nav-buttons{display:flex;gap:8px}.nav-buttons button{border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:bold;background:#1e293b;color:#e5e7eb}.nav-buttons button.active{background:#38bdf8;color:#020617}
-.home{flex:1;display:grid;grid-template-columns:1fr 1fr}.big-option{display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:.2s;text-align:center}.big-option:hover{filter:brightness(1.08)}.shift{background:#facc15;color:#1f2937}.hours{background:#dc2626;color:white}.big-option h2{font-size:58px;margin-bottom:12px}.big-option p{font-size:20px;font-weight:bold}
-.panel{min-height:calc(100vh - 70px);display:none;flex-direction:column;padding:24px}.panel-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:12px}.panel-top h2{font-size:32px}.back-btn{background:#334155;color:white;border:none;padding:12px 18px;border-radius:10px;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;flex:1}.choice{border:none;border-radius:18px;font-size:42px;font-weight:bold;cursor:pointer;transition:.2s}.choice:hover{transform:scale(1.02)}.shift-choice{background:#facc15;color:#111827}.hours-choice{background:#dc2626;color:white}
-.waiting,.working{min-height:calc(100vh - 70px);display:none;align-items:center;justify-content:center;text-align:center;padding:30px}.waiting{background:#991b1b}.working{background:#1d4ed8}.status-box h2{font-size:48px;margin-bottom:18px}.status-box p{font-size:22px;margin-bottom:12px}.timer{font-size:64px;font-weight:bold;margin:24px 0}
-.admin-screen{display:none;min-height:calc(100vh - 70px);padding:22px;background:#0f172a}.admin-layout{display:grid;grid-template-columns:360px 1fr;gap:18px;height:calc(100vh - 114px)}.request-list,.request-details{background:#020617;border:1px solid #1f2937;border-radius:18px;overflow:hidden}.section-title{padding:16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}.section-title h2{font-size:20px}.badge{background:#1e293b;color:#cbd5e1;padding:5px 9px;border-radius:999px;font-size:12px}.requests{height:calc(100% - 57px);overflow:auto;padding:12px}.req-card{padding:14px;border-radius:14px;margin-bottom:10px;cursor:pointer;border:2px solid transparent}.req-card.selected{border-color:#38bdf8}.req-card h3{font-size:17px;margin-bottom:6px}.req-card p{font-size:13px;color:#e5e7eb;margin-bottom:4px}.new-bg{background:#7f1d1d}.taken-bg{background:#1d4ed8}.done-bg{background:#166534}.details-body{padding:20px}.empty{color:#94a3b8;text-align:center;margin-top:60px}.detail-status{display:inline-block;padding:8px 12px;border-radius:999px;font-weight:bold;margin-bottom:14px}.detail-title{font-size:34px;margin-bottom:12px}.detail-line{color:#cbd5e1;margin-bottom:8px;font-size:17px}.admin-actions{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}.admin-actions button{border:none;padding:12px 16px;border-radius:10px;cursor:pointer;font-weight:bold}.take-btn{background:#38bdf8;color:#020617}.done-btn{background:#22c55e;color:#022c22}.disabled-btn{opacity:.45;cursor:not-allowed!important}.chat-box{margin-top:20px;border-top:1px solid #1f2937;padding-top:15px}.chat-messages{min-height:150px;max-height:230px;overflow:auto;background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:12px;margin-bottom:10px}.message{background:#1e293b;padding:9px 11px;border-radius:10px;margin-bottom:8px;font-size:14px}.chat-input{display:flex;gap:8px}.chat-input input{flex:1;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff}.chat-input button{border:none;padding:12px 14px;border-radius:10px;background:#38bdf8;color:#020617;font-weight:bold;cursor:pointer}.small-note{color:#94a3b8;font-size:13px;margin-top:10px}.error{background:#7f1d1d;color:#fff;padding:12px;border-radius:10px;margin-bottom:12px}
-@media(max-width:850px){.header{flex-direction:column;align-items:flex-start}.home{grid-template-columns:1fr}.big-option h2{font-size:44px}.grid{grid-template-columns:1fr 1fr}.choice{font-size:30px;min-height:90px}.admin-layout{grid-template-columns:1fr;height:auto}.request-list,.request-details{min-height:330px}}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}body{background:#0f172a;color:#fff;min-height:100vh}.header{background:#020617;border-bottom:1px solid #1f2937;padding:16px 22px;display:flex;justify-content:space-between;align-items:center}.header h1{font-size:24px}.header span{color:#94a3b8}.btn{border:none;border-radius:10px;padding:11px 14px;font-weight:bold;cursor:pointer}.blue{background:#38bdf8;color:#020617}.green{background:#22c55e;color:#052e16}.gray{background:#334155;color:white}.redbtn{background:#ef4444;color:white}.login{position:fixed;inset:0;background:#020617;display:flex;align-items:center;justify-content:center;z-index:99}.loginBox{background:#0f172a;border:1px solid #1f2937;border-radius:18px;padding:28px;width:330px}.loginBox h2{margin-bottom:15px}.loginBox input,.input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#111827;color:white;margin-bottom:10px}.home{min-height:calc(100vh - 65px);display:grid;grid-template-columns:1fr 1fr}.big{display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;text-align:center}.big h2{font-size:58px}.shift{background:#facc15;color:#1f2937}.hours{background:#dc2626}.panel{display:none;min-height:calc(100vh - 65px);padding:24px}.panelTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.choice{min-height:100px;border:none;border-radius:18px;font-size:36px;font-weight:bold;cursor:pointer}.waiting,.working{display:none;min-height:calc(100vh - 65px);align-items:center;justify-content:center;text-align:center;padding:20px}.waiting{background:#991b1b}.working{background:#1d4ed8}.status h2{font-size:44px;margin-bottom:15px}.timer{font-size:58px;font-weight:bold;margin:20px}.admin{display:none;padding:20px}.layout{display:grid;grid-template-columns:360px 1fr;gap:16px}.box{background:#020617;border:1px solid #1f2937;border-radius:18px;overflow:hidden}.boxHead{padding:15px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}.list{padding:12px;max-height:75vh;overflow:auto}.card{padding:14px;border-radius:14px;margin-bottom:10px;cursor:pointer;border:2px solid transparent}.card.sel{border-color:#38bdf8}.new{background:#7f1d1d}.taken{background:#1d4ed8}.done{background:#166534}.body{padding:18px}.line{margin:8px 0;color:#cbd5e1}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.msg{background:#1e293b;padding:9px;border-radius:10px;margin-bottom:8px}.chat{background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:10px;min-height:120px;max-height:230px;overflow:auto;margin-bottom:10px}.superBox{margin-top:18px;border-top:1px solid #1f2937;padding-top:16px}.preview{max-width:220px;border-radius:12px;margin-top:10px;border:1px solid #334155}@media(max-width:850px){.home{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.big h2{font-size:42px}}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <div><h1>Communicator</h1><span id="screenLabel">Customer Screen</span></div>
-    <div class="nav-buttons"><button id="customerNav" class="active">Customer</button><button id="adminNav">Admin</button></div>
-  </div>
+<div class="header"><div><h1>Communicator</h1><span id="userInfo">Not logged in</span></div><button class="btn gray" id="logoutBtn" style="display:none">Logout</button></div>
 
-  <section class="home" id="home">
-    <div class="big-option shift" id="shiftButton"><h2>SHIFT</h2><p>Request shift time</p></div>
-    <div class="big-option hours" id="hoursButton"><h2>HOURS</h2><p>Request extra hours</p></div>
-  </section>
+<div class="login" id="loginScreen"><div class="loginBox"><h2>Login</h2><input id="loginUsername" placeholder="Username"><input id="loginPassword" placeholder="Password / for customer leave empty" type="password"><button class="btn blue" style="width:100%" id="loginBtn">Login</button><p id="loginError" style="color:#f87171;margin-top:10px"></p></div></div>
 
-  <section class="panel" id="shiftPanel"><div class="panel-top"><h2>Choose SHIFT time</h2><button class="back-btn" id="backShift">Back</button></div><div class="grid" id="shiftGrid"></div></section>
-  <section class="panel" id="hoursPanel"><div class="panel-top"><h2>Choose HOURS</h2><button class="back-btn" id="backHours">Back</button></div><div class="grid" id="hoursGrid"></div></section>
+<section class="home" id="home"><div class="big shift" id="shiftBtn"><h2>SHIFT</h2><p>Request shift time</p></div><div class="big hours" id="hoursBtn"><h2>HOURS</h2><p>Request extra hours</p></div></section>
+<section class="panel" id="shiftPanel"><div class="panelTop"><h2>Choose SHIFT time</h2><button class="btn gray" id="back1">Back</button></div><div class="grid" id="shiftGrid"></div></section>
+<section class="panel" id="hoursPanel"><div class="panelTop"><h2>Choose HOURS</h2><button class="btn gray" id="back2">Back</button></div><div class="grid" id="hoursGrid"></div></section>
+<section class="panel" id="bolPanel"><div class="panelTop"><h2>BOL required</h2><button class="btn gray" id="back3">Back</button></div><p class="line">Please take a photo of BOL before sending request.</p><input class="input" id="bolFile" type="file" accept="image/*" capture="environment"><img id="bolPreview" class="preview" style="display:none"><button class="btn blue" id="continueAfterBol">Continue</button></section>
+<section class="waiting" id="waiting"><div class="status"><h2>REQUEST SENT</h2><p id="requestText"></p><div class="timer" id="timer">00:00:00</div><p>Waiting for operator...</p></div></section>
+<section class="working" id="working"><div class="status"><h2>OPERATOR IS WORKING</h2><p id="workingText"></p><div class="timer" id="timerBlue">00:00:00</div></div></section>
 
-  <section class="waiting" id="waiting"><div class="status-box"><h2>REQUEST SENT</h2><p id="requestText">Waiting for operator...</p><div class="timer" id="timer">00:00:00</div><p>Operator has not taken this request yet.</p></div></section>
-  <section class="working" id="working"><div class="status-box"><h2>OPERATOR IS WORKING</h2><p id="workingText">Your request has been taken.</p><div class="timer" id="timerBlue">00:00:00</div><p>Please wait until operator finishes.</p></div></section>
-
-  <section class="admin-screen" id="adminScreen">
-    <div class="admin-layout">
-      <div class="request-list"><div class="section-title"><h2>Requests</h2><span class="badge" id="requestCount">0</span></div><div class="requests" id="requestsList"></div></div>
-      <div class="request-details"><div class="section-title"><h2>Request Details</h2><span class="badge">Demo Admin</span></div><div class="details-body" id="detailsBody"><div class="empty">Select a request from the list.</div></div></div>
-    </div>
-  </section>
-</div>
+<section class="admin" id="admin"><div class="layout"><div class="box"><div class="boxHead"><h2>Requests</h2><span id="count">0</span></div><div class="list" id="requestList"></div></div><div class="box"><div class="boxHead"><h2>Details</h2><span id="roleBadge"></span></div><div class="body" id="details">Select request.</div></div></div></section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",
-  authDomain: "bamboo-bulwark-459920-p2.firebaseapp.com",
-  projectId: "bamboo-bulwark-459920-p2",
-  storageBucket: "bamboo-bulwark-459920-p2.firebasestorage.app",
-  messagingSenderId: "740396048112",
-  appId: "1:740396048112:web:72874b77b37bff2f3e2c35"
-};
+const firebaseConfig={apiKey:"AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",authDomain:"bamboo-bulwark-459920-p2.firebaseapp.com",projectId:"bamboo-bulwark-459920-p2",storageBucket:"bamboo-bulwark-459920-p2.firebasestorage.app",messagingSenderId:"740396048112",appId:"1:740396048112:web:72874b77b37bff2f3e2c35"};
+const app=initializeApp(firebaseConfig);const db=getFirestore(app);const $=id=>document.getElementById(id);
+let user=null,requests=[],selectedId=null,activeId=localStorage.getItem('activeRequestId'),timerInt=null,startTime=null,pendingBol=null,nextPanel=null;
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-window.db = db;
-const requestsRef = collection(db, "requests");
+$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('back1').onclick=showHome;$('back2').onclick=showHome;$('back3').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return} if(nextPanel) nextPanel();};$('bolFile').onchange=readBol;
 
-let requests = [];
-let selectedRequestId = null;
-let customerActiveRequestId = localStorage.getItem('customerActiveRequestId');
-let startTime = null;
-let timerInterval = null;
-let currentMode = 'customer';
+onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{requests=snap.docs.map(d=>({id:d.id,...d.data()}));if(user?.role==='customer')refreshCustomer();if(user?.role==='admin'||user?.role==='super_admin')renderAdmin();});
 
-const el = id => document.getElementById(id);
+async function login(){const u=$('loginUsername').value.trim();const p=$('loginPassword').value.trim();const ref=doc(db,'users',u);const snap=await getDoc(ref);if(!snap.exists()){$('loginError').innerText='User not found';return}const data=snap.data();if(data.role!=='customer'&&data.password!==p){$('loginError').innerText='Wrong password';return}user=data;localStorage.setItem('user',JSON.stringify(user));$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText=(user.name||user.username)+' / '+user.role;if(user.role==='customer')refreshCustomer();else showAdmin();}
+function logout(){localStorage.removeItem('user');localStorage.removeItem('activeRequestId');location.reload()}
+const saved=localStorage.getItem('user');if(saved){user=JSON.parse(saved);$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText=(user.name||user.username)+' / '+user.role;if(user.role==='customer')refreshCustomer();else showAdmin();}
 
-el('customerNav').onclick = showCustomerMode;
-el('adminNav').onclick = showAdminMode;
-el('shiftButton').onclick = openShift;
-el('hoursButton').onclick = openHours;
-el('backShift').onclick = goHome;
-el('backHours').onclick = goHome;
+function hideAll(){['home','shiftPanel','hoursPanel','bolPanel','waiting','working','admin'].forEach(id=>$(id).style.display='none')}
+function showHome(){hideAll();pendingBol=null;$('bolFile').value='';$('bolPreview').style.display='none';$('home').style.display='grid'}
+function showAdmin(){hideAll();$('admin').style.display='block';$('roleBadge').innerText=user.role;renderAdmin()}
+function getActive(){return requests.find(r=>r.id===activeId&&r.status!=='DONE')}
+function refreshCustomer(){const r=getActive();hideAll();if(!r){showHome();return}startTime=getDate(r.createdAt);if(r.status==='NEW'){$('requestText').innerText=r.type+' '+r.value;$('waiting').style.display='flex';startTimer()}else if(r.status==='TAKEN'){$('workingText').innerText=r.type+' '+r.value+' taken by '+(r.takenByName||'operator');$('working').style.display='flex';startTimer()}else{localStorage.removeItem('activeRequestId');activeId=null;showHome()}}
+function startTimer(){clearInterval(timerInt);timerInt=setInterval(()=>{const s=Math.max(0,Math.floor((new Date()-startTime)/1000));const h=String(Math.floor(s/3600)).padStart(2,'0'),m=String(Math.floor((s%3600)/60)).padStart(2,'0'),sec=String(s%60).padStart(2,'0');$('timer').innerText=h+':'+m+':'+sec;$('timerBlue').innerText=h+':'+m+':'+sec},1000)}
 
-const q = query(requestsRef, orderBy("createdAt", "desc"));
-onSnapshot(q, snapshot => {
-  requests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  if(currentMode === 'admin') renderAdmin();
-  if(currentMode === 'customer') refreshCustomerStatus();
-}, error => {
-  showError('Firebase error: ' + error.message + ' — proveri da li je Firestore Database uključen.');
-});
+function checkBolThen(fn){if(user?.bolRequired){nextPanel=fn;hideAll();$('bolPanel').style.display='block'}else fn()}
+function readBol(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{pendingBol=reader.result;$('bolPreview').src=pendingBol;$('bolPreview').style.display='block'};reader.readAsDataURL(file)}
+function openShift(){hideAll();const grid=$('shiftGrid');grid.innerHTML='';const now=new Date();now.setMinutes(0,0,0);now.setHours(now.getHours()+1);for(let i=0;i<10;i++){const d=new Date(now.getTime()+i*3600000);let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;const label=h+ap;grid.appendChild(choice(label,'shift',()=>sendRequest('SHIFT',label)))}$('shiftPanel').style.display='block'}
+function openHours(){hideAll();const grid=$('hoursGrid');grid.innerHTML='';for(let i=1;i<=8;i++){const label=i+'+';grid.appendChild(choice(label,'hours',()=>sendRequest('HOURS',label)))}$('hoursPanel').style.display='block'}
+function choice(text,cls,fn){const b=document.createElement('button');b.className='choice '+cls;b.innerText=text;b.onclick=fn;return b}
+async function sendRequest(type,value){const data={customerUsername:user.username,customerName:user.name||user.username,type,value,status:'NEW',createdAt:serverTimestamp(),takenByName:null,takenByUsername:null,doneByName:null,bolImage:pendingBol||null,messages:[{sender:user.name||'Customer',text:type+' '+value+' request sent.',createdAt:Date.now()}]};const ref=await addDoc(collection(db,'requests'),data);if(user.bolRequired)await updateDoc(doc(db,'users',user.username),{bolRequired:false});user.bolRequired=false;localStorage.setItem('user',JSON.stringify(user));activeId=ref.id;localStorage.setItem('activeRequestId',activeId);pendingBol=null;refreshCustomer()}
 
-function showError(text){
-  const body = el('detailsBody');
-  if(body) body.innerHTML = '<div class="error">'+escapeHtml(text)+'</div>' + body.innerHTML;
-}
-
-function hideCustomerScreens(){
-  el('home').style.display='none';
-  el('shiftPanel').style.display='none';
-  el('hoursPanel').style.display='none';
-  el('waiting').style.display='none';
-  el('working').style.display='none';
-}
-function hideAllScreens(){hideCustomerScreens();el('adminScreen').style.display='none'}
-function setNav(mode){
-  currentMode = mode;
-  el('customerNav').classList.toggle('active', mode === 'customer');
-  el('adminNav').classList.toggle('active', mode === 'admin');
-  el('screenLabel').innerText = mode === 'customer' ? 'Customer Screen' : 'Admin Screen';
-}
-
-function applyRolePermissions(){
-  const user = window.currentUser || currentUser;
-  if(!user) return;
-
-  if(user.role === 'customer'){
-    el('customerNav').style.display = 'none';
-    el('adminNav').style.display = 'none';
-  }
-
-  if(user.role === 'admin' || user.role === 'super_admin'){
-    el('customerNav').style.display = 'none';
-    el('adminNav').style.display = 'none';
-  }
-}
-function showCustomerMode(){
-  const user = window.currentUser || currentUser;
-  if(user && user.role !== 'customer'){
-    showAdminMode();
-    return;
-  }
-  hideAllScreens();
-  setNav('customer');
-  applyRolePermissions();
-  refreshCustomerStatus();
-}
-window.showCustomerMode = showCustomerMode;
-function showAdminMode(){
-  const user = window.currentUser || currentUser;
-  if(user && user.role === 'customer'){
-    showCustomerMode();
-    return;
-  }
-  hideAllScreens();
-  setNav('admin');
-  applyRolePermissions();
-  el('adminScreen').style.display='block';
-  renderAdmin();
-}
-window.showAdminMode = showAdminMode;
-function goHome(){hideCustomerScreens();el('home').style.display='grid';clearInterval(timerInterval)}
-
-function refreshCustomerStatus(){
-  const activeReq = getCustomerActiveRequest();
-  hideCustomerScreens();
-  if(activeReq && activeReq.status === 'NEW'){
-    el('requestText').innerText=activeReq.type+' request: '+activeReq.value;
-    el('waiting').style.display='flex';
-    startTime = getDate(activeReq.createdAt);
-    startTimer();
-  } else if(activeReq && activeReq.status === 'TAKEN'){
-    el('workingText').innerText=activeReq.type+' '+activeReq.value+' is taken by '+(activeReq.takenBy || 'operator')+'.';
-    el('working').style.display='flex';
-    startTime = getDate(activeReq.createdAt);
-    startTimer();
-  } else {
-    localStorage.removeItem('customerActiveRequestId');
-    customerActiveRequestId = null;
-    goHome();
-  }
-}
-
-function openShift(){hideCustomerScreens();buildShiftTimes();el('shiftPanel').style.display='flex'}
-function openHours(){hideCustomerScreens();buildHours();el('hoursPanel').style.display='flex'}
-
-function buildShiftTimes(){
-  const grid=el('shiftGrid');grid.innerHTML='';
-  const now=new Date();now.setMinutes(0,0,0);now.setHours(now.getHours()+1);
-  for(let i=0;i<10;i++){
-    const d=new Date(now.getTime()+i*60*60*1000);
-    let hour=d.getHours();const ampm=hour>=12?'PM':'AM';hour=hour%12;if(hour===0) hour=12;
-    const label=hour+ampm;
-    const btn=document.createElement('button');btn.className='choice shift-choice';btn.innerText=label;btn.onclick=()=>sendRequest('SHIFT',label);grid.appendChild(btn);
-  }
-}
-function buildHours(){
-  const grid=el('hoursGrid');grid.innerHTML='';
-  for(let i=1;i<=8;i++){
-    const label=i+'+';const btn=document.createElement('button');btn.className='choice hours-choice';btn.innerText=label;btn.onclick=()=>sendRequest('HOURS',label);grid.appendChild(btn);
-  }
-}
-
-async function sendRequest(type,value){
-  const docRef = await addDoc(requestsRef, {
-    customerName:'Demo Customer',
-    type,value,status:'NEW',
-    createdAt: serverTimestamp(),
-    createdAtLocal: Date.now(),
-    takenAt:null,doneAt:null,takenBy:null,
-    messages:[{sender:'Customer',text:type+' '+value+' request sent.',createdAt:Date.now()}]
-  });
-  selectedRequestId = docRef.id;
-  customerActiveRequestId = docRef.id;
-  localStorage.setItem('customerActiveRequestId', docRef.id);
-  startTime = new Date();
-  hideCustomerScreens();
-  el('requestText').innerText=type+' request: '+value;
-  el('waiting').style.display='flex';
-  startTimer();
-}
-
-function startTimer(){
-  clearInterval(timerInterval);
-  timerInterval=setInterval(()=>{
-    if(!startTime) return;
-    const diff=Math.max(0, Math.floor((new Date()-startTime)/1000));
-    const h=String(Math.floor(diff/3600)).padStart(2,'0');
-    const m=String(Math.floor((diff%3600)/60)).padStart(2,'0');
-    const s=String(diff%60).padStart(2,'0');
-    el('timer').innerText=h+':'+m+':'+s;
-    el('timerBlue').innerText=h+':'+m+':'+s;
-  },1000);
-}
-function getCustomerActiveRequest(){return requests.find(r => r.id === customerActiveRequestId && r.status !== 'DONE')}
-function getSortedRequests(){
-  const rank={NEW:1,TAKEN:2,DONE:3};
-  return [...requests].sort((a,b)=>{
-    if(rank[a.status]!==rank[b.status]) return rank[a.status]-rank[b.status];
-    return getDate(b.createdAt)-getDate(a.createdAt);
-  });
-}
-function statusClass(status){return status==='NEW'?'new-bg':status==='TAKEN'?'taken-bg':'done-bg'}
-
-function renderAdmin(){
-  const list=el('requestsList');const count=el('requestCount');const sorted=getSortedRequests();
-  count.innerText=requests.length;list.innerHTML='';
-  if(sorted.length===0){list.innerHTML='<div class="empty">No requests yet.</div>';renderDetails();return}
-  if(!selectedRequestId && sorted[0]) selectedRequestId = sorted[0].id;
-  sorted.forEach(r=>{
-    const div=document.createElement('div');
-    div.className='req-card '+statusClass(r.status)+(r.id===selectedRequestId?' selected':'');
-    div.onclick=()=>selectRequest(r.id);
-    div.innerHTML=`<h3>${escapeHtml(r.customerName || 'Customer')}</h3><p><b>${r.type}</b> ${r.value}</p><p>Status: <b>${r.status}</b></p><p>${formatElapsed(getDate(r.createdAt))} ago</p>`;
-    list.appendChild(div);
-  });
-  renderDetails();
-}
-function selectRequest(id){selectedRequestId=id;renderAdmin()}
-
-function renderDetails(){
-  const body=el('detailsBody');const r=requests.find(x=>x.id===selectedRequestId);
-  if(!r){body.innerHTML='<div class="empty">Select a request from the list.</div>';return}
-  const takeDisabled=r.status!=='NEW';const doneDisabled=r.status==='DONE';
-  const messages = Array.isArray(r.messages) ? r.messages : [];
-  body.innerHTML=`
-    <span class="detail-status ${statusClass(r.status)}">${r.status}</span>
-    <div class="detail-title">${r.type} ${r.value}</div>
-    <div class="detail-line"><b>Customer:</b> ${escapeHtml(r.customerName || 'Customer')}</div>
-    <div class="detail-line"><b>Created:</b> ${getDate(r.createdAt).toLocaleString()}</div>
-    <div class="detail-line"><b>Taken by:</b> ${escapeHtml(r.takenBy || '-')}</div>
-    <div class="admin-actions">
-      <button id="takeBtn" class="take-btn ${takeDisabled?'disabled-btn':''}" ${takeDisabled?'disabled':''}>Preuzmi</button>
-      <button id="doneBtn" class="done-btn ${doneDisabled?'disabled-btn':''}" ${doneDisabled?'disabled':''}>Završeno</button>
-    </div>
-    <div class="small-note">Ako jedan admin klikne Preuzmi, zahtev postaje plav kod svih operatera.</div>
-    <div class="chat-box"><h3>Chat</h3><div class="chat-messages">${messages.map(m=>`<div class="message"><b>${escapeHtml(m.sender)}:</b> ${escapeHtml(m.text)}</div>`).join('')}</div><div class="chat-input"><input id="chatInput" placeholder="Type admin message..."><button id="sendChatBtn">Send</button></div></div>
-  `;
-  const takeBtn=el('takeBtn'); if(takeBtn) takeBtn.onclick=()=>takeRequest(r.id);
-  const doneBtn=el('doneBtn'); if(doneBtn) doneBtn.onclick=()=>finishRequest(r.id);
-  const sendBtn=el('sendChatBtn'); if(sendBtn) sendBtn.onclick=()=>sendAdminMessage(r.id);
-  const input=el('chatInput'); if(input) input.onkeydown=(e)=>{if(e.key==='Enter') sendAdminMessage(r.id)};
-}
-
-async function takeRequest(id){
-  const ref=doc(db,'requests',id);
-  try{
-    await runTransaction(db, async transaction=>{
-      const snap=await transaction.get(ref);
-      if(!snap.exists()) return;
-      const data=snap.data();
-      if(data.status !== 'NEW') return;
-      transaction.update(ref,{
-        status:'TAKEN',takenBy:'Demo Admin',takenAt:serverTimestamp(),
-        messages: arrayUnion({sender:'Admin',text:'Request taken.',createdAt:Date.now()})
-      });
-    });
-  }catch(err){alert('Greška: '+err.message)}
-}
-async function finishRequest(id){
-  const ref=doc(db,'requests',id);
-  await updateDoc(ref,{status:'DONE',doneAt:serverTimestamp(),messages:arrayUnion({sender:'Admin',text:'Request finished.',createdAt:Date.now()})});
-}
-async function sendAdminMessage(id){
-  const input=el('chatInput');if(!input)return;const text=input.value.trim();if(!text)return;
-  await updateDoc(doc(db,'requests',id),{messages:arrayUnion({sender:'Admin',text,createdAt:Date.now()})});
-  input.value='';
-}
-
-function getDate(value){
-  if(!value) return new Date();
-  if(value.toDate) return value.toDate();
-  if(typeof value === 'number') return new Date(value);
-  return new Date(value);
-}
-function formatElapsed(date){
-  const diff=Math.floor((new Date()-date)/1000);
-  if(diff<60)return diff+'s';if(diff<3600)return Math.floor(diff/60)+'m';return Math.floor(diff/3600)+'h';
-}
-function escapeHtml(text){return String(text || '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-
-window.showCustomerMode();
+function renderAdmin(){const list=$('requestList');$('count').innerText=requests.length;list.innerHTML='';const rank={NEW:1,TAKEN:2,DONE:3};const sorted=[...requests].sort((a,b)=>(rank[a.status]-rank[b.status])||(getDate(b.createdAt)-getDate(a.createdAt)));if(!selectedId&&sorted[0])selectedId=sorted[0].id;sorted.forEach(r=>{const div=document.createElement('div');div.className='card '+(r.status==='NEW'?'new':r.status==='TAKEN'?'taken':'done')+(r.id===selectedId?' sel':'');div.innerHTML='<b>'+esc(r.customerName)+'</b><br>'+r.type+' '+r.value+'<br>Status: '+r.status+'<br>Taken by: '+esc(r.takenByName||'-');div.onclick=()=>{selectedId=r.id;renderAdmin()};list.appendChild(div)});renderDetails()}
+function renderDetails(){const r=requests.find(x=>x.id===selectedId);if(!r){$('details').innerHTML='Select request.';return}const msgs=Array.isArray(r.messages)?r.messages:[];$('details').innerHTML=`<h2>${r.type} ${r.value}</h2><div class="line"><b>Customer:</b> ${esc(r.customerName)}</div><div class="line"><b>Status:</b> ${r.status}</div><div class="line"><b>Operator:</b> ${esc(r.takenByName||'-')}</div>${r.bolImage?`<div class="line"><b>BOL:</b><br><img src="${r.bolImage}" class="preview"></div>`:''}<div class="actions"><button class="btn blue" id="take">Preuzmi</button><button class="btn green" id="done">Završeno</button><button class="btn redbtn" id="bolReq">Require BOL next time</button></div><div class="chat">${msgs.map(m=>`<div class="msg"><b>${esc(m.sender)}:</b> ${esc(m.text)}</div>`).join('')}</div><div style="display:flex;gap:8px"><input class="input" id="chatInput" placeholder="Message"><button class="btn blue" id="sendMsg">Send</button></div>${user.role==='super_admin'?superAdminHtml():''}`;$('take').onclick=()=>takeRequest(r.id);$('done').onclick=()=>doneRequest(r.id);$('bolReq').onclick=()=>requireBol(r);$('sendMsg').onclick=()=>sendMsg(r.id);const au=$('addUser');if(au)au.onclick=addUser}
+function superAdminHtml(){return `<div class="superBox"><h3>Super Admin - Add user</h3><input class="input" id="newUsername" placeholder="username"><input class="input" id="newName" placeholder="name / company"><input class="input" id="newPassword" placeholder="password"><select id="newRole"><option value="admin">admin</option><option value="customer">customer</option><option value="super_admin">super_admin</option></select><button class="btn blue" id="addUser">Add user</button></div>`}
+async function takeRequest(id){await runTransaction(db,async t=>{const ref=doc(db,'requests',id);const s=await t.get(ref);if(!s.exists()||s.data().status!=='NEW')return;t.update(ref,{status:'TAKEN',takenByName:user.name,takenByUsername:user.username,takenAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Taken by '+user.name,createdAt:Date.now()})})})}
+async function doneRequest(id){await updateDoc(doc(db,'requests',id),{status:'DONE',doneByName:user.name,doneAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Finished by '+user.name,createdAt:Date.now()})})}
+async function requireBol(r){if(!r.customerUsername){alert('No customer username');return}await updateDoc(doc(db,'users',r.customerUsername),{bolRequired:true});await updateDoc(doc(db,'requests',r.id),{messages:arrayUnion({sender:'System',text:'BOL required enabled for next request.',createdAt:Date.now()})});alert('BOL ukljucen za '+r.customerName)}
+async function sendMsg(id){const input=$('chatInput');const text=input.value.trim();if(!text)return;await updateDoc(doc(db,'requests',id),{messages:arrayUnion({sender:user.name,text,createdAt:Date.now()})});input.value=''}
+async function addUser(){const username=$('newUsername').value.trim(),name=$('newName').value.trim(),password=$('newPassword').value.trim(),role=$('newRole').value;if(!username||!name)return alert('Popuni username i name');const data={username,name,role};if(role!=='customer')data.password=password||'1234';await setDoc(doc(db,'users',username),data);alert('User dodat: '+username)}
+function getDate(v){return v?.toDate?v.toDate():new Date(v||Date.now())}function esc(t){return String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 </script>
-<!-- LOGIN UI -->
-<div id="loginScreen" style="position:fixed;inset:0;background:#020617;display:flex;align-items:center;justify-content:center;z-index:9999;">
-  <div style="background:#0f172a;padding:30px;border-radius:16px;width:320px;">
-    <h2 style="margin-bottom:15px">Login</h2>
-    <input id="loginUsername" placeholder="Username" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none">
-    <input id="loginPassword" placeholder="Password (admin only)" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none">
-    <button onclick="loginUser()" style="width:100%;padding:12px;border:none;border-radius:8px;background:#38bdf8;color:#000;font-weight:bold">Login</button>
-    <p id="loginError" style="color:red;margin-top:10px"></p>
-  </div>
-</div>
-
-<script type="module">
-import { getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-let currentUser = null;
-window.currentUser = null;
-
-async function loginUser(){
-  const username = document.getElementById('loginUsername').value.trim();
-  const password = document.getElementById('loginPassword').value.trim();
-  const error = document.getElementById('loginError');
-
-  const snapshot = await getDocs(collection(window.db, "users"));
-  let found = null;
-
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    if(data.username === username){
-      found = data;
-    }
-  });
-
-  if(!found){
-    error.innerText = "User not found";
-    return;
-  }
-
-  if(found.role !== 'customer' && found.password !== password){
-    error.innerText = "Wrong password";
-    return;
-  }
-
-  currentUser = found;
-  window.currentUser = found;
-  localStorage.setItem('user', JSON.stringify(found));
-  document.getElementById('loginScreen').style.display='none';
-
-  if(found.role === 'admin' || found.role === 'super_admin'){
-    window.showAdminMode();
-  } else {
-    window.showCustomerMode();
-  }
-}
-
-window.loginUser = loginUser;
-
-// auto login
-const saved = localStorage.getItem('user');
-if(saved){
-  currentUser = JSON.parse(saved);
-  window.currentUser = currentUser;
-  document.getElementById('loginScreen').style.display='none';
-  if(currentUser.role === 'admin' || currentUser.role === 'super_admin'){
-    window.showAdminMode();
-  } else {
-    window.showCustomerMode();
-  }
-}
-</script>
-
 </body>
 </html>
