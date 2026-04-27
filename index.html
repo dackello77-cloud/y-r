@@ -3,741 +3,268 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Communicator Demo</title>
+<title>Communicator Firebase</title>
 <style>
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-  font-family:Arial, sans-serif;
-}
-body{
-  background:#0f172a;
-  color:#fff;
-  min-height:100vh;
-}
-.app{
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-.header{
-  padding:16px 22px;
-  background:#020617;
-  border-bottom:1px solid #1f2937;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
-.header h1{
-  font-size:24px;
-  color:#e5e7eb;
-}
-.header span{
-  color:#94a3b8;
-  font-size:14px;
-}
-.nav-buttons{
-  display:flex;
-  gap:8px;
-}
-.nav-buttons button{
-  border:none;
-  padding:10px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:bold;
-  background:#1e293b;
-  color:#e5e7eb;
-}
-.nav-buttons button.active{
-  background:#38bdf8;
-  color:#020617;
-}
-.home{
-  flex:1;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-}
-.big-option{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  cursor:pointer;
-  transition:0.2s;
-  text-align:center;
-}
-.big-option:hover{
-  filter:brightness(1.08);
-}
-.shift{
-  background:#facc15;
-  color:#1f2937;
-}
-.hours{
-  background:#dc2626;
-  color:white;
-}
-.big-option h2{
-  font-size:58px;
-  margin-bottom:12px;
-}
-.big-option p{
-  font-size:20px;
-  font-weight:bold;
-}
-.panel{
-  min-height:calc(100vh - 70px);
-  display:none;
-  flex-direction:column;
-  padding:24px;
-}
-.panel-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:24px;
-  gap:12px;
-}
-.panel-top h2{
-  font-size:32px;
-}
-.back-btn{
-  background:#334155;
-  color:white;
-  border:none;
-  padding:12px 18px;
-  border-radius:10px;
-  cursor:pointer;
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:16px;
-  flex:1;
-}
-.choice{
-  border:none;
-  border-radius:18px;
-  font-size:42px;
-  font-weight:bold;
-  cursor:pointer;
-  transition:0.2s;
-}
-.choice:hover{
-  transform:scale(1.02);
-}
-.shift-choice{
-  background:#facc15;
-  color:#111827;
-}
-.hours-choice{
-  background:#dc2626;
-  color:white;
-}
-.waiting,
-.working{
-  min-height:calc(100vh - 70px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:30px;
-}
-.waiting{
-  background:#991b1b;
-}
-.working{
-  background:#1d4ed8;
-}
-.status-box h2{
-  font-size:48px;
-  margin-bottom:18px;
-}
-.status-box p{
-  font-size:22px;
-  margin-bottom:12px;
-}
-.timer{
-  font-size:64px;
-  font-weight:bold;
-  margin:24px 0;
-}
-.admin-screen{
-  display:none;
-  min-height:calc(100vh - 70px);
-  padding:22px;
-  background:#0f172a;
-}
-.admin-layout{
-  display:grid;
-  grid-template-columns:360px 1fr;
-  gap:18px;
-  height:calc(100vh - 114px);
-}
-.request-list,
-.request-details{
-  background:#020617;
-  border:1px solid #1f2937;
-  border-radius:18px;
-  overflow:hidden;
-}
-.section-title{
-  padding:16px;
-  border-bottom:1px solid #1f2937;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.section-title h2{
-  font-size:20px;
-}
-.badge{
-  background:#1e293b;
-  color:#cbd5e1;
-  padding:5px 9px;
-  border-radius:999px;
-  font-size:12px;
-}
-.requests{
-  height:calc(100% - 57px);
-  overflow:auto;
-  padding:12px;
-}
-.req-card{
-  padding:14px;
-  border-radius:14px;
-  margin-bottom:10px;
-  cursor:pointer;
-  border:2px solid transparent;
-}
-.req-card.selected{
-  border-color:#38bdf8;
-}
-.req-card h3{
-  font-size:17px;
-  margin-bottom:6px;
-}
-.req-card p{
-  font-size:13px;
-  color:#e5e7eb;
-  margin-bottom:4px;
-}
-.new-bg{
-  background:#7f1d1d;
-}
-.taken-bg{
-  background:#1d4ed8;
-}
-.done-bg{
-  background:#166534;
-}
-.details-body{
-  padding:20px;
-}
-.empty{
-  color:#94a3b8;
-  text-align:center;
-  margin-top:60px;
-}
-.detail-status{
-  display:inline-block;
-  padding:8px 12px;
-  border-radius:999px;
-  font-weight:bold;
-  margin-bottom:14px;
-}
-.detail-title{
-  font-size:34px;
-  margin-bottom:12px;
-}
-.detail-line{
-  color:#cbd5e1;
-  margin-bottom:8px;
-  font-size:17px;
-}
-.admin-actions{
-  display:flex;
-  gap:10px;
-  margin:20px 0;
-  flex-wrap:wrap;
-}
-.admin-actions button{
-  border:none;
-  padding:12px 16px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:bold;
-}
-.take-btn{
-  background:#38bdf8;
-  color:#020617;
-}
-.done-btn{
-  background:#22c55e;
-  color:#022c22;
-}
-.disabled-btn{
-  opacity:0.45;
-  cursor:not-allowed !important;
-}
-.chat-box{
-  margin-top:20px;
-  border-top:1px solid #1f2937;
-  padding-top:15px;
-}
-.chat-messages{
-  min-height:150px;
-  max-height:230px;
-  overflow:auto;
-  background:#0f172a;
-  border:1px solid #1f2937;
-  border-radius:12px;
-  padding:12px;
-  margin-bottom:10px;
-}
-.message{
-  background:#1e293b;
-  padding:9px 11px;
-  border-radius:10px;
-  margin-bottom:8px;
-  font-size:14px;
-}
-.chat-input{
-  display:flex;
-  gap:8px;
-}
-.chat-input input{
-  flex:1;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid #334155;
-  background:#0f172a;
-  color:#fff;
-}
-.chat-input button{
-  border:none;
-  padding:12px 14px;
-  border-radius:10px;
-  background:#38bdf8;
-  color:#020617;
-  font-weight:bold;
-  cursor:pointer;
-}
-.small-note{
-  color:#94a3b8;
-  font-size:13px;
-  margin-top:10px;
-}
-@media(max-width:850px){
-  .header{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-  .home{
-    grid-template-columns:1fr;
-  }
-  .big-option h2{
-    font-size:44px;
-  }
-  .grid{
-    grid-template-columns:1fr 1fr;
-  }
-  .choice{
-    font-size:30px;
-    min-height:90px;
-  }
-  .admin-layout{
-    grid-template-columns:1fr;
-    height:auto;
-  }
-  .request-list,
-  .request-details{
-    min-height:330px;
-  }
-}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#0f172a;color:#fff;min-height:100vh}
+.app{min-height:100vh;display:flex;flex-direction:column}
+.header{padding:16px 22px;background:#020617;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.header h1{font-size:24px;color:#e5e7eb}.header span{color:#94a3b8;font-size:14px}.nav-buttons{display:flex;gap:8px}.nav-buttons button{border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:bold;background:#1e293b;color:#e5e7eb}.nav-buttons button.active{background:#38bdf8;color:#020617}
+.home{flex:1;display:grid;grid-template-columns:1fr 1fr}.big-option{display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:.2s;text-align:center}.big-option:hover{filter:brightness(1.08)}.shift{background:#facc15;color:#1f2937}.hours{background:#dc2626;color:white}.big-option h2{font-size:58px;margin-bottom:12px}.big-option p{font-size:20px;font-weight:bold}
+.panel{min-height:calc(100vh - 70px);display:none;flex-direction:column;padding:24px}.panel-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:12px}.panel-top h2{font-size:32px}.back-btn{background:#334155;color:white;border:none;padding:12px 18px;border-radius:10px;cursor:pointer}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;flex:1}.choice{border:none;border-radius:18px;font-size:42px;font-weight:bold;cursor:pointer;transition:.2s}.choice:hover{transform:scale(1.02)}.shift-choice{background:#facc15;color:#111827}.hours-choice{background:#dc2626;color:white}
+.waiting,.working{min-height:calc(100vh - 70px);display:none;align-items:center;justify-content:center;text-align:center;padding:30px}.waiting{background:#991b1b}.working{background:#1d4ed8}.status-box h2{font-size:48px;margin-bottom:18px}.status-box p{font-size:22px;margin-bottom:12px}.timer{font-size:64px;font-weight:bold;margin:24px 0}
+.admin-screen{display:none;min-height:calc(100vh - 70px);padding:22px;background:#0f172a}.admin-layout{display:grid;grid-template-columns:360px 1fr;gap:18px;height:calc(100vh - 114px)}.request-list,.request-details{background:#020617;border:1px solid #1f2937;border-radius:18px;overflow:hidden}.section-title{padding:16px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}.section-title h2{font-size:20px}.badge{background:#1e293b;color:#cbd5e1;padding:5px 9px;border-radius:999px;font-size:12px}.requests{height:calc(100% - 57px);overflow:auto;padding:12px}.req-card{padding:14px;border-radius:14px;margin-bottom:10px;cursor:pointer;border:2px solid transparent}.req-card.selected{border-color:#38bdf8}.req-card h3{font-size:17px;margin-bottom:6px}.req-card p{font-size:13px;color:#e5e7eb;margin-bottom:4px}.new-bg{background:#7f1d1d}.taken-bg{background:#1d4ed8}.done-bg{background:#166534}.details-body{padding:20px}.empty{color:#94a3b8;text-align:center;margin-top:60px}.detail-status{display:inline-block;padding:8px 12px;border-radius:999px;font-weight:bold;margin-bottom:14px}.detail-title{font-size:34px;margin-bottom:12px}.detail-line{color:#cbd5e1;margin-bottom:8px;font-size:17px}.admin-actions{display:flex;gap:10px;margin:20px 0;flex-wrap:wrap}.admin-actions button{border:none;padding:12px 16px;border-radius:10px;cursor:pointer;font-weight:bold}.take-btn{background:#38bdf8;color:#020617}.done-btn{background:#22c55e;color:#022c22}.disabled-btn{opacity:.45;cursor:not-allowed!important}.chat-box{margin-top:20px;border-top:1px solid #1f2937;padding-top:15px}.chat-messages{min-height:150px;max-height:230px;overflow:auto;background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:12px;margin-bottom:10px}.message{background:#1e293b;padding:9px 11px;border-radius:10px;margin-bottom:8px;font-size:14px}.chat-input{display:flex;gap:8px}.chat-input input{flex:1;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff}.chat-input button{border:none;padding:12px 14px;border-radius:10px;background:#38bdf8;color:#020617;font-weight:bold;cursor:pointer}.small-note{color:#94a3b8;font-size:13px;margin-top:10px}.error{background:#7f1d1d;color:#fff;padding:12px;border-radius:10px;margin-bottom:12px}
+@media(max-width:850px){.header{flex-direction:column;align-items:flex-start}.home{grid-template-columns:1fr}.big-option h2{font-size:44px}.grid{grid-template-columns:1fr 1fr}.choice{font-size:30px;min-height:90px}.admin-layout{grid-template-columns:1fr;height:auto}.request-list,.request-details{min-height:330px}}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="header" id="header">
-    <div>
-      <h1>Communicator</h1>
-      <span id="screenLabel">Customer Screen</span>
-    </div>
-    <div class="nav-buttons">
-      <button id="customerNav" class="active" onclick="showCustomerMode()">Customer</button>
-      <button id="adminNav" onclick="showAdminMode()">Admin</button>
-    </div>
+  <div class="header">
+    <div><h1>Communicator</h1><span id="screenLabel">Customer Screen</span></div>
+    <div class="nav-buttons"><button id="customerNav" class="active">Customer</button><button id="adminNav">Admin</button></div>
   </div>
 
   <section class="home" id="home">
-    <div class="big-option shift" onclick="openShift()">
-      <h2>SHIFT</h2>
-      <p>Request shift time</p>
-    </div>
-    <div class="big-option hours" onclick="openHours()">
-      <h2>HOURS</h2>
-      <p>Request extra hours</p>
-    </div>
+    <div class="big-option shift" id="shiftButton"><h2>SHIFT</h2><p>Request shift time</p></div>
+    <div class="big-option hours" id="hoursButton"><h2>HOURS</h2><p>Request extra hours</p></div>
   </section>
 
-  <section class="panel" id="shiftPanel">
-    <div class="panel-top">
-      <h2>Choose SHIFT time</h2>
-      <button class="back-btn" onclick="goHome()">Back</button>
-    </div>
-    <div class="grid" id="shiftGrid"></div>
-  </section>
+  <section class="panel" id="shiftPanel"><div class="panel-top"><h2>Choose SHIFT time</h2><button class="back-btn" id="backShift">Back</button></div><div class="grid" id="shiftGrid"></div></section>
+  <section class="panel" id="hoursPanel"><div class="panel-top"><h2>Choose HOURS</h2><button class="back-btn" id="backHours">Back</button></div><div class="grid" id="hoursGrid"></div></section>
 
-  <section class="panel" id="hoursPanel">
-    <div class="panel-top">
-      <h2>Choose HOURS</h2>
-      <button class="back-btn" onclick="goHome()">Back</button>
-    </div>
-    <div class="grid" id="hoursGrid"></div>
-  </section>
-
-  <section class="waiting" id="waiting">
-    <div class="status-box">
-      <h2>REQUEST SENT</h2>
-      <p id="requestText">Waiting for operator...</p>
-      <div class="timer" id="timer">00:00:00</div>
-      <p>Operator has not taken this request yet.</p>
-    </div>
-  </section>
-
-  <section class="working" id="working">
-    <div class="status-box">
-      <h2>OPERATOR IS WORKING</h2>
-      <p id="workingText">Your request has been taken.</p>
-      <div class="timer" id="timerBlue">00:00:00</div>
-      <p>Please wait until operator finishes.</p>
-    </div>
-  </section>
+  <section class="waiting" id="waiting"><div class="status-box"><h2>REQUEST SENT</h2><p id="requestText">Waiting for operator...</p><div class="timer" id="timer">00:00:00</div><p>Operator has not taken this request yet.</p></div></section>
+  <section class="working" id="working"><div class="status-box"><h2>OPERATOR IS WORKING</h2><p id="workingText">Your request has been taken.</p><div class="timer" id="timerBlue">00:00:00</div><p>Please wait until operator finishes.</p></div></section>
 
   <section class="admin-screen" id="adminScreen">
     <div class="admin-layout">
-      <div class="request-list">
-        <div class="section-title">
-          <h2>Requests</h2>
-          <span class="badge" id="requestCount">0</span>
-        </div>
-        <div class="requests" id="requestsList"></div>
-      </div>
-
-      <div class="request-details">
-        <div class="section-title">
-          <h2>Request Details</h2>
-          <span class="badge">Demo Admin</span>
-        </div>
-        <div class="details-body" id="detailsBody">
-          <div class="empty">Select a request from the list.</div>
-        </div>
-      </div>
+      <div class="request-list"><div class="section-title"><h2>Requests</h2><span class="badge" id="requestCount">0</span></div><div class="requests" id="requestsList"></div></div>
+      <div class="request-details"><div class="section-title"><h2>Request Details</h2><span class="badge">Demo Admin</span></div><div class="details-body" id="detailsBody"><div class="empty">Select a request from the list.</div></div></div>
     </div>
   </section>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",
+  authDomain: "bamboo-bulwark-459920-p2.firebaseapp.com",
+  projectId: "bamboo-bulwark-459920-p2",
+  storageBucket: "bamboo-bulwark-459920-p2.firebasestorage.app",
+  messagingSenderId: "740396048112",
+  appId: "1:740396048112:web:72874b77b37bff2f3e2c35"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const requestsRef = collection(db, "requests");
+
 let requests = [];
 let selectedRequestId = null;
-let customerActiveRequestId = null;
+let customerActiveRequestId = localStorage.getItem('customerActiveRequestId');
 let startTime = null;
 let timerInterval = null;
+let currentMode = 'customer';
+
+const el = id => document.getElementById(id);
+
+el('customerNav').onclick = showCustomerMode;
+el('adminNav').onclick = showAdminMode;
+el('shiftButton').onclick = openShift;
+el('hoursButton').onclick = openHours;
+el('backShift').onclick = goHome;
+el('backHours').onclick = goHome;
+
+const q = query(requestsRef, orderBy("createdAt", "desc"));
+onSnapshot(q, snapshot => {
+  requests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  if(currentMode === 'admin') renderAdmin();
+  if(currentMode === 'customer') refreshCustomerStatus();
+}, error => {
+  showError('Firebase error: ' + error.message + ' — proveri da li je Firestore Database uključen.');
+});
+
+function showError(text){
+  const body = el('detailsBody');
+  if(body) body.innerHTML = '<div class="error">'+escapeHtml(text)+'</div>' + body.innerHTML;
+}
 
 function hideCustomerScreens(){
-  document.getElementById('home').style.display='none';
-  document.getElementById('shiftPanel').style.display='none';
-  document.getElementById('hoursPanel').style.display='none';
-  document.getElementById('waiting').style.display='none';
-  document.getElementById('working').style.display='none';
+  el('home').style.display='none';
+  el('shiftPanel').style.display='none';
+  el('hoursPanel').style.display='none';
+  el('waiting').style.display='none';
+  el('working').style.display='none';
 }
-
-function hideAllScreens(){
-  hideCustomerScreens();
-  document.getElementById('adminScreen').style.display='none';
-}
-
+function hideAllScreens(){hideCustomerScreens();el('adminScreen').style.display='none'}
 function setNav(mode){
-  document.getElementById('customerNav').classList.toggle('active', mode === 'customer');
-  document.getElementById('adminNav').classList.toggle('active', mode === 'admin');
-  document.getElementById('screenLabel').innerText = mode === 'customer' ? 'Customer Screen' : 'Admin Screen';
+  currentMode = mode;
+  el('customerNav').classList.toggle('active', mode === 'customer');
+  el('adminNav').classList.toggle('active', mode === 'admin');
+  el('screenLabel').innerText = mode === 'customer' ? 'Customer Screen' : 'Admin Screen';
 }
+function showCustomerMode(){hideAllScreens();setNav('customer');refreshCustomerStatus()}
+function showAdminMode(){hideAllScreens();setNav('admin');el('adminScreen').style.display='block';renderAdmin()}
+function goHome(){hideCustomerScreens();el('home').style.display='grid';clearInterval(timerInterval)}
 
-function showCustomerMode(){
-  hideAllScreens();
-  setNav('customer');
+function refreshCustomerStatus(){
   const activeReq = getCustomerActiveRequest();
+  hideCustomerScreens();
   if(activeReq && activeReq.status === 'NEW'){
-    document.getElementById('requestText').innerText=activeReq.type+' request: '+activeReq.value;
-    document.getElementById('waiting').style.display='flex';
-    startTime = activeReq.createdAt;
+    el('requestText').innerText=activeReq.type+' request: '+activeReq.value;
+    el('waiting').style.display='flex';
+    startTime = getDate(activeReq.createdAt);
     startTimer();
   } else if(activeReq && activeReq.status === 'TAKEN'){
-    document.getElementById('workingText').innerText=activeReq.type+' '+activeReq.value+' is taken by '+activeReq.takenBy+'.';
-    document.getElementById('working').style.display='flex';
-    startTime = activeReq.createdAt;
+    el('workingText').innerText=activeReq.type+' '+activeReq.value+' is taken by '+(activeReq.takenBy || 'operator')+'.';
+    el('working').style.display='flex';
+    startTime = getDate(activeReq.createdAt);
     startTimer();
   } else {
+    localStorage.removeItem('customerActiveRequestId');
+    customerActiveRequestId = null;
     goHome();
   }
 }
 
-function showAdminMode(){
-  hideAllScreens();
-  setNav('admin');
-  document.getElementById('adminScreen').style.display='block';
-  renderAdmin();
-}
-
-function goHome(){
-  hideCustomerScreens();
-  document.getElementById('home').style.display='grid';
-  clearInterval(timerInterval);
-}
-
-function openShift(){
-  hideCustomerScreens();
-  buildShiftTimes();
-  document.getElementById('shiftPanel').style.display='flex';
-}
-
-function openHours(){
-  hideCustomerScreens();
-  buildHours();
-  document.getElementById('hoursPanel').style.display='flex';
-}
+function openShift(){hideCustomerScreens();buildShiftTimes();el('shiftPanel').style.display='flex'}
+function openHours(){hideCustomerScreens();buildHours();el('hoursPanel').style.display='flex'}
 
 function buildShiftTimes(){
-  const grid=document.getElementById('shiftGrid');
-  grid.innerHTML='';
-  const now=new Date();
-  now.setMinutes(0,0,0);
-  now.setHours(now.getHours()+1);
-
+  const grid=el('shiftGrid');grid.innerHTML='';
+  const now=new Date();now.setMinutes(0,0,0);now.setHours(now.getHours()+1);
   for(let i=0;i<10;i++){
     const d=new Date(now.getTime()+i*60*60*1000);
-    let hour=d.getHours();
-    const ampm=hour>=12?'PM':'AM';
-    hour=hour%12;
-    if(hour===0) hour=12;
+    let hour=d.getHours();const ampm=hour>=12?'PM':'AM';hour=hour%12;if(hour===0) hour=12;
     const label=hour+ampm;
-
-    const btn=document.createElement('button');
-    btn.className='choice shift-choice';
-    btn.innerText=label;
-    btn.onclick=()=>sendRequest('SHIFT',label);
-    grid.appendChild(btn);
+    const btn=document.createElement('button');btn.className='choice shift-choice';btn.innerText=label;btn.onclick=()=>sendRequest('SHIFT',label);grid.appendChild(btn);
   }
 }
-
 function buildHours(){
-  const grid=document.getElementById('hoursGrid');
-  grid.innerHTML='';
+  const grid=el('hoursGrid');grid.innerHTML='';
   for(let i=1;i<=8;i++){
-    const label=i+'+';
-    const btn=document.createElement('button');
-    btn.className='choice hours-choice';
-    btn.innerText=label;
-    btn.onclick=()=>sendRequest('HOURS',label);
-    grid.appendChild(btn);
+    const label=i+'+';const btn=document.createElement('button');btn.className='choice hours-choice';btn.innerText=label;btn.onclick=()=>sendRequest('HOURS',label);grid.appendChild(btn);
   }
 }
 
-function sendRequest(type,value){
-  const request = {
-    id: Date.now(),
-    customerName: 'Demo Customer',
-    type: type,
-    value: value,
-    status: 'NEW',
-    createdAt: new Date(),
-    takenAt: null,
-    doneAt: null,
-    takenBy: null,
-    messages: [
-      { sender:'Customer', text:type+' '+value+' request sent.' }
-    ]
-  };
-  requests.push(request);
-  selectedRequestId = request.id;
-  customerActiveRequestId = request.id;
-  startTime=request.createdAt;
+async function sendRequest(type,value){
+  const docRef = await addDoc(requestsRef, {
+    customerName:'Demo Customer',
+    type,value,status:'NEW',
+    createdAt: serverTimestamp(),
+    createdAtLocal: Date.now(),
+    takenAt:null,doneAt:null,takenBy:null,
+    messages:[{sender:'Customer',text:type+' '+value+' request sent.',createdAt:Date.now()}]
+  });
+  selectedRequestId = docRef.id;
+  customerActiveRequestId = docRef.id;
+  localStorage.setItem('customerActiveRequestId', docRef.id);
+  startTime = new Date();
   hideCustomerScreens();
-  document.getElementById('requestText').innerText=type+' request: '+value;
-  document.getElementById('waiting').style.display='flex';
+  el('requestText').innerText=type+' request: '+value;
+  el('waiting').style.display='flex';
   startTimer();
-  renderAdmin();
 }
 
 function startTimer(){
   clearInterval(timerInterval);
   timerInterval=setInterval(()=>{
-    const diff=Math.floor((new Date()-startTime)/1000);
+    if(!startTime) return;
+    const diff=Math.max(0, Math.floor((new Date()-startTime)/1000));
     const h=String(Math.floor(diff/3600)).padStart(2,'0');
     const m=String(Math.floor((diff%3600)/60)).padStart(2,'0');
     const s=String(diff%60).padStart(2,'0');
-    document.getElementById('timer').innerText=h+':'+m+':'+s;
-    document.getElementById('timerBlue').innerText=h+':'+m+':'+s;
+    el('timer').innerText=h+':'+m+':'+s;
+    el('timerBlue').innerText=h+':'+m+':'+s;
   },1000);
 }
-
-function getCustomerActiveRequest(){
-  return requests.find(r => r.id === customerActiveRequestId && r.status !== 'DONE');
-}
-
+function getCustomerActiveRequest(){return requests.find(r => r.id === customerActiveRequestId && r.status !== 'DONE')}
 function getSortedRequests(){
-  const rank = { 'NEW': 1, 'TAKEN': 2, 'DONE': 3 };
+  const rank={NEW:1,TAKEN:2,DONE:3};
   return [...requests].sort((a,b)=>{
-    if(rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
-    return b.createdAt - a.createdAt;
+    if(rank[a.status]!==rank[b.status]) return rank[a.status]-rank[b.status];
+    return getDate(b.createdAt)-getDate(a.createdAt);
   });
 }
-
-function statusClass(status){
-  if(status === 'NEW') return 'new-bg';
-  if(status === 'TAKEN') return 'taken-bg';
-  return 'done-bg';
-}
+function statusClass(status){return status==='NEW'?'new-bg':status==='TAKEN'?'taken-bg':'done-bg'}
 
 function renderAdmin(){
-  const list = document.getElementById('requestsList');
-  const count = document.getElementById('requestCount');
-  if(!list || !count) return;
-
-  const sorted = getSortedRequests();
-  count.innerText = requests.length;
-  list.innerHTML = '';
-
-  if(sorted.length === 0){
-    list.innerHTML = '<div class="empty">No requests yet.</div>';
-    renderDetails();
-    return;
-  }
-
+  const list=el('requestsList');const count=el('requestCount');const sorted=getSortedRequests();
+  count.innerText=requests.length;list.innerHTML='';
+  if(sorted.length===0){list.innerHTML='<div class="empty">No requests yet.</div>';renderDetails();return}
+  if(!selectedRequestId && sorted[0]) selectedRequestId = sorted[0].id;
   sorted.forEach(r=>{
-    const div = document.createElement('div');
-    div.className = 'req-card '+statusClass(r.status)+(r.id===selectedRequestId?' selected':'');
-    div.onclick = ()=>selectRequest(r.id);
-    div.innerHTML = `
-      <h3>${r.customerName}</h3>
-      <p><b>${r.type}</b> ${r.value}</p>
-      <p>Status: <b>${r.status}</b></p>
-      <p>${formatElapsed(r.createdAt)} ago</p>
-    `;
+    const div=document.createElement('div');
+    div.className='req-card '+statusClass(r.status)+(r.id===selectedRequestId?' selected':'');
+    div.onclick=()=>selectRequest(r.id);
+    div.innerHTML=`<h3>${escapeHtml(r.customerName || 'Customer')}</h3><p><b>${r.type}</b> ${r.value}</p><p>Status: <b>${r.status}</b></p><p>${formatElapsed(getDate(r.createdAt))} ago</p>`;
     list.appendChild(div);
   });
   renderDetails();
 }
-
-function selectRequest(id){
-  selectedRequestId = id;
-  renderAdmin();
-}
+function selectRequest(id){selectedRequestId=id;renderAdmin()}
 
 function renderDetails(){
-  const body = document.getElementById('detailsBody');
-  if(!body) return;
-  const r = requests.find(x=>x.id===selectedRequestId);
-
-  if(!r){
-    body.innerHTML = '<div class="empty">Select a request from the list.</div>';
-    return;
-  }
-
-  const takeDisabled = r.status !== 'NEW';
-  const doneDisabled = r.status === 'DONE';
-  const takenText = r.takenBy ? r.takenBy : '-';
-
-  body.innerHTML = `
+  const body=el('detailsBody');const r=requests.find(x=>x.id===selectedRequestId);
+  if(!r){body.innerHTML='<div class="empty">Select a request from the list.</div>';return}
+  const takeDisabled=r.status!=='NEW';const doneDisabled=r.status==='DONE';
+  const messages = Array.isArray(r.messages) ? r.messages : [];
+  body.innerHTML=`
     <span class="detail-status ${statusClass(r.status)}">${r.status}</span>
     <div class="detail-title">${r.type} ${r.value}</div>
-    <div class="detail-line"><b>Customer:</b> ${r.customerName}</div>
-    <div class="detail-line"><b>Created:</b> ${r.createdAt.toLocaleString()}</div>
-    <div class="detail-line"><b>Taken by:</b> ${takenText}</div>
-
+    <div class="detail-line"><b>Customer:</b> ${escapeHtml(r.customerName || 'Customer')}</div>
+    <div class="detail-line"><b>Created:</b> ${getDate(r.createdAt).toLocaleString()}</div>
+    <div class="detail-line"><b>Taken by:</b> ${escapeHtml(r.takenBy || '-')}</div>
     <div class="admin-actions">
-      <button class="take-btn ${takeDisabled?'disabled-btn':''}" onclick="takeRequest(${r.id})" ${takeDisabled?'disabled':''}>Preuzmi</button>
-      <button class="done-btn ${doneDisabled?'disabled-btn':''}" onclick="finishRequest(${r.id})" ${doneDisabled?'disabled':''}>Završeno</button>
+      <button id="takeBtn" class="take-btn ${takeDisabled?'disabled-btn':''}" ${takeDisabled?'disabled':''}>Preuzmi</button>
+      <button id="doneBtn" class="done-btn ${doneDisabled?'disabled-btn':''}" ${doneDisabled?'disabled':''}>Završeno</button>
     </div>
-
-    <div class="small-note">
-      Pravilo: kada jedan admin klikne Preuzmi, zahtev postaje plav i drugi više ne mogu da ga preuzmu.
-    </div>
-
-    <div class="chat-box">
-      <h3>Chat</h3>
-      <div class="chat-messages" id="chatMessages">
-        ${r.messages.map(m=>`<div class="message"><b>${m.sender}:</b> ${escapeHtml(m.text)}</div>`).join('')}
-      </div>
-      <div class="chat-input">
-        <input id="chatInput" placeholder="Type admin message..." onkeydown="if(event.key==='Enter') sendAdminMessage(${r.id})">
-        <button onclick="sendAdminMessage(${r.id})">Send</button>
-      </div>
-    </div>
+    <div class="small-note">Ako jedan admin klikne Preuzmi, zahtev postaje plav kod svih operatera.</div>
+    <div class="chat-box"><h3>Chat</h3><div class="chat-messages">${messages.map(m=>`<div class="message"><b>${escapeHtml(m.sender)}:</b> ${escapeHtml(m.text)}</div>`).join('')}</div><div class="chat-input"><input id="chatInput" placeholder="Type admin message..."><button id="sendChatBtn">Send</button></div></div>
   `;
+  const takeBtn=el('takeBtn'); if(takeBtn) takeBtn.onclick=()=>takeRequest(r.id);
+  const doneBtn=el('doneBtn'); if(doneBtn) doneBtn.onclick=()=>finishRequest(r.id);
+  const sendBtn=el('sendChatBtn'); if(sendBtn) sendBtn.onclick=()=>sendAdminMessage(r.id);
+  const input=el('chatInput'); if(input) input.onkeydown=(e)=>{if(e.key==='Enter') sendAdminMessage(r.id)};
 }
 
-function takeRequest(id){
-  const r = requests.find(x=>x.id===id);
-  if(!r || r.status !== 'NEW') return;
-  r.status = 'TAKEN';
-  r.takenBy = 'Demo Admin';
-  r.takenAt = new Date();
-  r.messages.push({sender:'Admin', text:'Request taken.'});
-  selectedRequestId = id;
-
-  if(customerActiveRequestId === id){
-    document.getElementById('workingText').innerText=r.type+' '+r.value+' is taken by '+r.takenBy+'.';
-  }
-  renderAdmin();
+async function takeRequest(id){
+  const ref=doc(db,'requests',id);
+  try{
+    await runTransaction(db, async transaction=>{
+      const snap=await transaction.get(ref);
+      if(!snap.exists()) return;
+      const data=snap.data();
+      if(data.status !== 'NEW') return;
+      transaction.update(ref,{
+        status:'TAKEN',takenBy:'Demo Admin',takenAt:serverTimestamp(),
+        messages: arrayUnion({sender:'Admin',text:'Request taken.',createdAt:Date.now()})
+      });
+    });
+  }catch(err){alert('Greška: '+err.message)}
 }
-
-function finishRequest(id){
-  const r = requests.find(x=>x.id===id);
-  if(!r || r.status === 'DONE') return;
-  r.status = 'DONE';
-  r.doneAt = new Date();
-  r.messages.push({sender:'Admin', text:'Request finished.'});
-
-  if(customerActiveRequestId === id){
-    customerActiveRequestId = null;
-    showCustomerMode();
-  }
-  renderAdmin();
+async function finishRequest(id){
+  const ref=doc(db,'requests',id);
+  await updateDoc(ref,{status:'DONE',doneAt:serverTimestamp(),messages:arrayUnion({sender:'Admin',text:'Request finished.',createdAt:Date.now()})});
 }
-
-function sendAdminMessage(id){
-  const input = document.getElementById('chatInput');
-  if(!input) return;
-  const text = input.value.trim();
-  if(!text) return;
-  const r = requests.find(x=>x.id===id);
-  if(!r) return;
-  r.messages.push({sender:'Admin', text:text});
+async function sendAdminMessage(id){
+  const input=el('chatInput');if(!input)return;const text=input.value.trim();if(!text)return;
+  await updateDoc(doc(db,'requests',id),{messages:arrayUnion({sender:'Admin',text,createdAt:Date.now()})});
   input.value='';
-  renderDetails();
 }
 
+function getDate(value){
+  if(!value) return new Date();
+  if(value.toDate) return value.toDate();
+  if(typeof value === 'number') return new Date(value);
+  return new Date(value);
+}
 function formatElapsed(date){
   const diff=Math.floor((new Date()-date)/1000);
-  if(diff < 60) return diff+'s';
-  if(diff < 3600) return Math.floor(diff/60)+'m';
-  return Math.floor(diff/3600)+'h';
+  if(diff<60)return diff+'s';if(diff<3600)return Math.floor(diff/60)+'m';return Math.floor(diff/3600)+'h';
 }
-
-function escapeHtml(text){
-  return text.replace(/[&<>"]/g, function(c){
-    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
-  });
-}
-
-setInterval(()=>{
-  if(document.getElementById('adminScreen').style.display === 'block') renderAdmin();
-}, 1000);
+function escapeHtml(text){return String(text || '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 showCustomerMode();
 </script>
