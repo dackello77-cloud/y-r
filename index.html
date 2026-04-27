@@ -268,5 +268,72 @@ function escapeHtml(text){return String(text || '').replace(/[&<>"]/g,c=>({'&':'
 
 showCustomerMode();
 </script>
+<!-- LOGIN UI -->
+<div id="loginScreen" style="position:fixed;inset:0;background:#020617;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#0f172a;padding:30px;border-radius:16px;width:320px;">
+    <h2 style="margin-bottom:15px">Login</h2>
+    <input id="loginUsername" placeholder="Username" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none">
+    <input id="loginPassword" placeholder="Password (admin only)" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:none">
+    <button onclick="loginUser()" style="width:100%;padding:12px;border:none;border-radius:8px;background:#38bdf8;color:#000;font-weight:bold">Login</button>
+    <p id="loginError" style="color:red;margin-top:10px"></p>
+  </div>
+</div>
+
+<script type="module">
+import { getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+let currentUser = null;
+
+async function loginUser(){
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const error = document.getElementById('loginError');
+
+  const snapshot = await getDocs(collection(db, "users"));
+  let found = null;
+
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    if(data.username === username){
+      found = data;
+    }
+  });
+
+  if(!found){
+    error.innerText = "User not found";
+    return;
+  }
+
+  if(found.role !== 'customer' && found.password !== password){
+    error.innerText = "Wrong password";
+    return;
+  }
+
+  currentUser = found;
+  localStorage.setItem('user', JSON.stringify(found));
+  document.getElementById('loginScreen').style.display='none';
+
+  if(found.role === 'admin' || found.role === 'super_admin'){
+    showAdminMode();
+  } else {
+    showCustomerMode();
+  }
+}
+
+window.loginUser = loginUser;
+
+// auto login
+const saved = localStorage.getItem('user');
+if(saved){
+  currentUser = JSON.parse(saved);
+  document.getElementById('loginScreen').style.display='none';
+  if(currentUser.role === 'admin' || currentUser.role === 'super_admin'){
+    showAdminMode();
+  } else {
+    showCustomerMode();
+  }
+}
+</script>
+
 </body>
 </html>
