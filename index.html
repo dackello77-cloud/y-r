@@ -105,9 +105,45 @@ function setNav(mode){
   el('adminNav').classList.toggle('active', mode === 'admin');
   el('screenLabel').innerText = mode === 'customer' ? 'Customer Screen' : 'Admin Screen';
 }
-function showCustomerMode(){hideAllScreens();setNav('customer');refreshCustomerStatus()}
+
+function applyRolePermissions(){
+  const user = window.currentUser || currentUser;
+  if(!user) return;
+
+  if(user.role === 'customer'){
+    el('customerNav').style.display = 'none';
+    el('adminNav').style.display = 'none';
+  }
+
+  if(user.role === 'admin' || user.role === 'super_admin'){
+    el('customerNav').style.display = 'none';
+    el('adminNav').style.display = 'none';
+  }
+}
+function showCustomerMode(){
+  const user = window.currentUser || currentUser;
+  if(user && user.role !== 'customer'){
+    showAdminMode();
+    return;
+  }
+  hideAllScreens();
+  setNav('customer');
+  applyRolePermissions();
+  refreshCustomerStatus();
+}
 window.showCustomerMode = showCustomerMode;
-function showAdminMode(){hideAllScreens();setNav('admin');el('adminScreen').style.display='block';renderAdmin()}
+function showAdminMode(){
+  const user = window.currentUser || currentUser;
+  if(user && user.role === 'customer'){
+    showCustomerMode();
+    return;
+  }
+  hideAllScreens();
+  setNav('admin');
+  applyRolePermissions();
+  el('adminScreen').style.display='block';
+  renderAdmin();
+}
 window.showAdminMode = showAdminMode;
 function goHome(){hideCustomerScreens();el('home').style.display='grid';clearInterval(timerInterval)}
 
@@ -286,6 +322,7 @@ window.showCustomerMode();
 import { getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 let currentUser = null;
+window.currentUser = null;
 
 async function loginUser(){
   const username = document.getElementById('loginUsername').value.trim();
@@ -313,6 +350,7 @@ async function loginUser(){
   }
 
   currentUser = found;
+  window.currentUser = found;
   localStorage.setItem('user', JSON.stringify(found));
   document.getElementById('loginScreen').style.display='none';
 
@@ -329,6 +367,7 @@ window.loginUser = loginUser;
 const saved = localStorage.getItem('user');
 if(saved){
   currentUser = JSON.parse(saved);
+  window.currentUser = currentUser;
   document.getElementById('loginScreen').style.display='none';
   if(currentUser.role === 'admin' || currentUser.role === 'super_admin'){
     window.showAdminMode();
