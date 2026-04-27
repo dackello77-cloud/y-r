@@ -58,6 +58,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+window.db = db;
 const requestsRef = collection(db, "requests");
 
 let requests = [];
@@ -105,7 +106,9 @@ function setNav(mode){
   el('screenLabel').innerText = mode === 'customer' ? 'Customer Screen' : 'Admin Screen';
 }
 function showCustomerMode(){hideAllScreens();setNav('customer');refreshCustomerStatus()}
+window.showCustomerMode = showCustomerMode;
 function showAdminMode(){hideAllScreens();setNav('admin');el('adminScreen').style.display='block';renderAdmin()}
+window.showAdminMode = showAdminMode;
 function goHome(){hideCustomerScreens();el('home').style.display='grid';clearInterval(timerInterval)}
 
 function refreshCustomerStatus(){
@@ -266,7 +269,7 @@ function formatElapsed(date){
 }
 function escapeHtml(text){return String(text || '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
-showCustomerMode();
+window.showCustomerMode();
 </script>
 <!-- LOGIN UI -->
 <div id="loginScreen" style="position:fixed;inset:0;background:#020617;display:flex;align-items:center;justify-content:center;z-index:9999;">
@@ -289,7 +292,7 @@ async function loginUser(){
   const password = document.getElementById('loginPassword').value.trim();
   const error = document.getElementById('loginError');
 
-  const snapshot = await getDocs(collection(db, "users"));
+  const snapshot = await getDocs(collection(window.db, "users"));
   let found = null;
 
   snapshot.forEach(doc=>{
@@ -314,9 +317,9 @@ async function loginUser(){
   document.getElementById('loginScreen').style.display='none';
 
   if(found.role === 'admin' || found.role === 'super_admin'){
-    showAdminMode();
+    window.showAdminMode();
   } else {
-    showCustomerMode();
+    window.showCustomerMode();
   }
 }
 
@@ -328,9 +331,9 @@ if(saved){
   currentUser = JSON.parse(saved);
   document.getElementById('loginScreen').style.display='none';
   if(currentUser.role === 'admin' || currentUser.role === 'super_admin'){
-    showAdminMode();
+    window.showAdminMode();
   } else {
-    showCustomerMode();
+    window.showCustomerMode();
   }
 }
 </script>
