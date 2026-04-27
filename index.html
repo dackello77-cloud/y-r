@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Communicator Demo</title>
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:white}
+.container{display:flex;height:100vh}
+.sidebar{width:300px;background:#020617;border-right:1px solid #1f2937;padding:15px}
+.main{flex:1;display:flex;flex-direction:column}
+.card{padding:15px;margin-bottom:10px;border-radius:10px;cursor:pointer}
+.red{background:#7f1d1d}
+.blue{background:#1e3a8a}
+.green{background:#064e3b}
+button{padding:10px;margin-top:10px;border:none;border-radius:8px;cursor:pointer}
+.top{padding:15px;border-bottom:1px solid #1f2937}
+.chat{flex:1;padding:15px;overflow:auto}
+.input{display:flex;padding:10px;border-top:1px solid #1f2937}
+input{flex:1;padding:10px;border-radius:8px;border:none}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="sidebar">
+<h3>Requests</h3>
+<div id="list"></div>
+</div>
+<div class="main">
+<div class="top">Communicator Demo</div>
+<div class="chat" id="chat"></div>
+<div class="input">
+<input id="msg" placeholder="Type message...">
+<button onclick="sendMsg()">Send</button>
+</div>
+</div>
+</div>
+
+<script>
+let requests = [];
+
+function createRequest(type,value){
+let r={id:Date.now(),type,value,status:'NEW',messages:[]};
+requests.unshift(r);
+render();
+}
+
+function take(id){
+requests.forEach(r=>{if(r.id===id && r.status==='NEW'){r.status='TAKEN'}});
+render();
+}
+
+function done(id){
+requests.forEach(r=>{if(r.id===id){r.status='DONE'}});
+render();
+}
+
+function render(){
+let list=document.getElementById('list');
+list.innerHTML='';
+requests.forEach(r=>{
+let div=document.createElement('div');
+div.className='card '+(r.status==='NEW'?'red':r.status==='TAKEN'?'blue':'green');
+div.innerHTML=`${r.type} ${r.value}<br>Status: ${r.status}
+<br><button onclick="take(${r.id})">Take</button>
+<button onclick="done(${r.id})">Done</button>`;
+list.appendChild(div);
+});
+}
+
+function sendMsg(){
+let text=document.getElementById('msg').value;
+if(!text)return;
+let chat=document.getElementById('chat');
+let p=document.createElement('p');
+p.innerText=text;
+chat.appendChild(p);
+document.getElementById('msg').value='';
+}
+
+// demo buttons
+setTimeout(()=>createRequest('SHIFT','10AM'),1000);
+setTimeout(()=>createRequest('HOURS','3+'),2000);
+</script>
+</body>
+</html>
