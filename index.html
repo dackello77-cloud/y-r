@@ -109,7 +109,7 @@ body{background:#0f172a;color:#fff;min-height:100vh}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",
@@ -126,6 +126,7 @@ const $ = id => document.getElementById(id);
 
 let user = null;
 let requests = [];
+let allUsers = [];
 let selectedId = null;
 let activeId = localStorage.getItem('activeRequestId');
 let timerInt = null;
@@ -152,6 +153,11 @@ onSnapshot(query(collection(db,'requests'), orderBy('createdAt','desc')), snap =
   if(user?.role === 'admin' || user?.role === 'super_admin') renderAdmin();
 }, err => {
   alert('Firestore error: ' + err.message);
+});
+
+onSnapshot(collection(db,'users'), snap => {
+  allUsers = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  if(user?.role === 'super_admin') renderAdmin();
 });
 
 async function login(){
@@ -388,17 +394,24 @@ async function sendRequest(type, value){
 
 function renderAdmin(){
   const list = $('requestList');
-  $('count').innerText = requests.length;
+  let visibleRequests = requests;
+
+  if(user.role === 'admin'){
+    visibleRequests = requests.filter(r => Array.isArray(user.assignedCustomers) && user.assignedCustomers.includes(r.customerUsername));
+  }
+
+  $('count').innerText = visibleRequests.length;
   list.innerHTML = '';
 
   const rank = {NEW:1, TAKEN:2, DONE:3};
-  const sorted = [...requests].sort((a,b) => {
+  const sorted = [...visibleRequests].sort((a,b) => {
     const r = (rank[a.status] || 9) - (rank[b.status] || 9);
     if(r !== 0) return r;
     return getDate(b.createdAt) - getDate(a.createdAt);
   });
 
   if(!selectedId && sorted[0]) selectedId = sorted[0].id;
+  if(selectedId && !sorted.find(r => r.id === selectedId)) selectedId = sorted[0]?.id || null;
 
   if(sorted.length === 0){
     list.innerHTML = '<div class="line">No requests yet.</div>';
@@ -483,6 +496,9 @@ function renderChatTab(r){
 }
 
 function renderUserTab(){
+  const admins = allUsers.filter(u => u.role === 'admin');
+  const customers = allUsers.filter(u => u.role === 'customer');
+
   $('tabContent').innerHTML = `
     <h2>Add User</h2>
     <input class="input" id="newUsername" placeholder="username">
@@ -496,8 +512,46 @@ function renderUserTab(){
     <button class="btn blue" id="addUserBtn">Add user</button>
     <p class="note">Za customer password može da ostane prazan.</p>
     <p id="addUserStatus"></p>
+
+    <hr style="border:0;border-top:1px solid #1f2937;margin:20px 0">
+
+    <h2>Manage Users</h2>
+    <div class="note">Ovde Super Admin briše korisnike i određuje koji admin vidi kog customera.</div>
+
+    <div style="margin-top:15px">
+      ${allUsers.map(u => `
+        <div class="msg">
+          <b>${esc(u.name || u.username)}</b><br>
+          username: ${esc(u.username)}<br>
+          role: ${esc(u.role)}
+          ${u.role !== 'super_admin' ? `<br><button class="btn redbtn" onclick="window.deleteUserByUsername('${escAttr(u.username)}')">Delete</button>` : ''}
+        </div>
+      `).join('')}
+    </div>
+
+    <hr style="border:0;border-top:1px solid #1f2937;margin:20px 0">
+
+    <h2>Assign Customers to Admin</h2>
+    <select id="assignAdmin">
+      <option value="">Choose admin</option>
+      ${admins.map(a => `<option value="${escAttr(a.username)}">${esc(a.name || a.username)}</option>`).join('')}
+    </select>
+
+    <div id="customerChecklist" style="margin:10px 0">
+      ${customers.map(c => `
+        <label style="display:block;margin:8px 0;background:#111827;padding:10px;border-radius:10px">
+          <input type="checkbox" class="customerCheck" value="${escAttr(c.username)}"> ${esc(c.name || c.username)}
+        </label>
+      `).join('')}
+    </div>
+
+    <button class="btn blue" id="saveAssignmentsBtn">Save assignments</button>
+    <p id="assignmentStatus"></p>
   `;
+
   $('addUserBtn').onclick = addUser;
+  $('assignAdmin').onchange = loadAdminAssignments;
+  $('saveAssignmentsBtn').onclick = saveAssignments;
 }
 
 async function takeRequest(id){
@@ -582,6 +636,7 @@ async function addUser(){
   const data = { username, name, role, active:true };
   if(role !== 'customer') data.password = password || '1234';
   if(role === 'customer') data.bolRequired = false;
+  if(role === 'admin') data.assignedCustomers = [];
 
   await setDoc(doc(db,'users',username), data);
 
@@ -590,6 +645,39 @@ async function addUser(){
   $('newUsername').value='';
   $('newName').value='';
   $('newPassword').value='';
+}
+
+window.deleteUserByUsername = async function(username){
+  if(!confirm('Da li sigurno brišeš usera: ' + username + '?')) return;
+  await deleteDoc(doc(db,'users',username));
+  alert('User obrisan: ' + username);
+}
+
+function loadAdminAssignments(){
+  const adminUsername = $('assignAdmin').value;
+  const admin = allUsers.find(u => u.username === adminUsername);
+  const assigned = Array.isArray(admin?.assignedCustomers) ? admin.assignedCustomers : [];
+  document.querySelectorAll('.customerCheck').forEach(ch => {
+    ch.checked = assigned.includes(ch.value);
+  });
+}
+
+async function saveAssignments(){
+  const adminUsername = $('assignAdmin').value;
+  const status = $('assignmentStatus');
+  if(!adminUsername){
+    status.className='error';
+    status.innerText='Izaberi admina.';
+    return;
+  }
+  const assignedCustomers = [...document.querySelectorAll('.customerCheck:checked')].map(ch => ch.value);
+  await updateDoc(doc(db,'users',adminUsername), {assignedCustomers});
+  status.className='success';
+  status.innerText='Sačuvano. Admin vidi: ' + assignedCustomers.join(', ');
+}
+
+function escAttr(t){
+  return String(t || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
 
 function getDate(v){
