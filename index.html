@@ -5,62 +5,602 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Communicator</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}body{background:#0f172a;color:#fff;min-height:100vh}.header{background:#020617;border-bottom:1px solid #1f2937;padding:16px 22px;display:flex;justify-content:space-between;align-items:center}.header h1{font-size:24px}.header span{color:#94a3b8}.btn{border:none;border-radius:10px;padding:11px 14px;font-weight:bold;cursor:pointer}.blue{background:#38bdf8;color:#020617}.green{background:#22c55e;color:#052e16}.gray{background:#334155;color:white}.redbtn{background:#ef4444;color:white}.login{position:fixed;inset:0;background:#020617;display:flex;align-items:center;justify-content:center;z-index:99}.loginBox{background:#0f172a;border:1px solid #1f2937;border-radius:18px;padding:28px;width:330px}.loginBox h2{margin-bottom:15px}.loginBox input,.input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#111827;color:white;margin-bottom:10px}.home{min-height:calc(100vh - 65px);display:grid;grid-template-columns:1fr 1fr}.big{display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;text-align:center}.big h2{font-size:58px}.shift{background:#facc15;color:#1f2937}.hours{background:#dc2626}.panel{display:none;min-height:calc(100vh - 65px);padding:24px}.panelTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.choice{min-height:100px;border:none;border-radius:18px;font-size:36px;font-weight:bold;cursor:pointer}.waiting,.working{display:none;min-height:calc(100vh - 65px);align-items:center;justify-content:center;text-align:center;padding:20px}.waiting{background:#991b1b}.working{background:#1d4ed8}.status h2{font-size:44px;margin-bottom:15px}.timer{font-size:58px;font-weight:bold;margin:20px}.admin{display:none;padding:20px}.layout{display:grid;grid-template-columns:360px 1fr;gap:16px}.box{background:#020617;border:1px solid #1f2937;border-radius:18px;overflow:hidden}.boxHead{padding:15px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}.list{padding:12px;max-height:75vh;overflow:auto}.card{padding:14px;border-radius:14px;margin-bottom:10px;cursor:pointer;border:2px solid transparent}.card.sel{border-color:#38bdf8}.new{background:#7f1d1d}.taken{background:#1d4ed8}.done{background:#166534}.body{padding:18px}.line{margin:8px 0;color:#cbd5e1}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.msg{background:#1e293b;padding:9px;border-radius:10px;margin-bottom:8px}.chat{background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:10px;min-height:120px;max-height:230px;overflow:auto;margin-bottom:10px}.superBox{margin-top:18px;border-top:1px solid #1f2937;padding-top:16px}.preview{max-width:220px;border-radius:12px;margin-top:10px;border:1px solid #334155}@media(max-width:850px){.home{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.big h2{font-size:42px}}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#0f172a;color:#fff;min-height:100vh}
+.header{background:#020617;border-bottom:1px solid #1f2937;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.header h1{font-size:24px}.header span{color:#94a3b8}.btn{border:none;border-radius:10px;padding:11px 14px;font-weight:bold;cursor:pointer}.blue{background:#38bdf8;color:#020617}.green{background:#22c55e;color:#052e16}.gray{background:#334155;color:white}.redbtn{background:#ef4444;color:white}.yellowbtn{background:#facc15;color:#1f2937}.disabled{opacity:.45;cursor:not-allowed!important}.login{position:fixed;inset:0;background:#020617;display:flex;align-items:center;justify-content:center;z-index:99}.loginBox{background:#0f172a;border:1px solid #1f2937;border-radius:18px;padding:28px;width:340px}.loginBox h2{margin-bottom:15px}.input,.loginBox input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#111827;color:white;margin-bottom:10px}.home{min-height:calc(100vh - 65px);display:none;grid-template-columns:1fr 1fr}.big{display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;text-align:center;transition:.2s}.big:hover{filter:brightness(1.08)}.big h2{font-size:58px;margin-bottom:10px}.shift{background:#facc15;color:#1f2937}.hours{background:#dc2626}.panel{display:none;min-height:calc(100vh - 65px);padding:24px}.panelTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.choice{min-height:100px;border:none;border-radius:18px;font-size:36px;font-weight:bold;cursor:pointer}.waiting,.working{display:none;min-height:calc(100vh - 65px);align-items:center;justify-content:center;text-align:center;padding:20px}.waiting{background:#991b1b}.working{background:#1d4ed8}.status h2{font-size:44px;margin-bottom:15px}.status p{font-size:20px}.timer{font-size:58px;font-weight:bold;margin:20px}.admin{display:none;padding:20px}.layout{display:grid;grid-template-columns:360px 1fr;gap:16px}.box{background:#020617;border:1px solid #1f2937;border-radius:18px;overflow:hidden}.boxHead{padding:15px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center}.list{padding:12px;max-height:78vh;overflow:auto}.card{padding:14px;border-radius:14px;margin-bottom:10px;cursor:pointer;border:2px solid transparent}.card.sel{border-color:#38bdf8}.new{background:#7f1d1d}.taken{background:#1d4ed8}.done{background:#166534}.body{padding:18px}.line{margin:8px 0;color:#cbd5e1}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.msg{background:#1e293b;padding:9px;border-radius:10px;margin-bottom:8px}.chat{background:#0f172a;border:1px solid #1f2937;border-radius:12px;padding:10px;min-height:140px;max-height:260px;overflow:auto;margin-bottom:10px}.preview{max-width:240px;border-radius:12px;margin-top:10px;border:1px solid #334155}.tabs{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}.note{color:#94a3b8;font-size:13px;margin-top:8px}.error{color:#f87171;margin-top:10px}.success{color:#22c55e;margin-top:10px}.mini{font-size:13px;color:#cbd5e1;margin-top:5px}
+@media(max-width:850px){.header{flex-direction:column;align-items:flex-start}.home{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.big h2{font-size:42px}.choice{font-size:30px}.list{max-height:none}}
 </style>
 </head>
 <body>
-<div class="header"><div><h1>Communicator</h1><span id="userInfo">Not logged in</span></div><button class="btn gray" id="logoutBtn" style="display:none">Logout</button></div>
 
-<div class="login" id="loginScreen"><div class="loginBox"><h2>Login</h2><input id="loginUsername" placeholder="Username"><input id="loginPassword" placeholder="Password / for customer leave empty" type="password"><button class="btn blue" style="width:100%" id="loginBtn">Login</button><p id="loginError" style="color:#f87171;margin-top:10px"></p></div></div>
+<div class="header">
+  <div>
+    <h1>Communicator</h1>
+    <span id="userInfo">Not logged in</span>
+  </div>
+  <button class="btn gray" id="logoutBtn" style="display:none">Logout</button>
+</div>
 
-<section class="home" id="home"><div class="big shift" id="shiftBtn"><h2>SHIFT</h2><p>Request shift time</p></div><div class="big hours" id="hoursBtn"><h2>HOURS</h2><p>Request extra hours</p></div></section>
-<section class="panel" id="shiftPanel"><div class="panelTop"><h2>Choose SHIFT time</h2><button class="btn gray" id="back1">Back</button></div><div class="grid" id="shiftGrid"></div></section>
-<section class="panel" id="hoursPanel"><div class="panelTop"><h2>Choose HOURS</h2><button class="btn gray" id="back2">Back</button></div><div class="grid" id="hoursGrid"></div></section>
-<section class="panel" id="bolPanel"><div class="panelTop"><h2>BOL required</h2><button class="btn gray" id="back3">Back</button></div><p class="line">Please take a photo of BOL before sending request.</p><input class="input" id="bolFile" type="file" accept="image/*" capture="environment"><img id="bolPreview" class="preview" style="display:none"><button class="btn blue" id="continueAfterBol">Continue</button></section>
-<section class="waiting" id="waiting"><div class="status"><h2>REQUEST SENT</h2><p id="requestText"></p><div class="timer" id="timer">00:00:00</div><p>Waiting for operator...</p></div></section>
-<section class="working" id="working"><div class="status"><h2>OPERATOR IS WORKING</h2><p id="workingText"></p><div class="timer" id="timerBlue">00:00:00</div></div></section>
+<div class="login" id="loginScreen">
+  <div class="loginBox">
+    <h2>Login</h2>
+    <input id="loginUsername" placeholder="Username">
+    <input id="loginPassword" placeholder="Password / customer leave empty" type="password">
+    <button class="btn blue" style="width:100%" id="loginBtn">Login</button>
+    <p id="loginError" class="error"></p>
+  </div>
+</div>
 
-<section class="admin" id="admin"><div class="layout"><div class="box"><div class="boxHead"><h2>Requests</h2><span id="count">0</span></div><div class="list" id="requestList"></div></div><div class="box"><div class="boxHead"><h2>Details</h2><span id="roleBadge"></span></div><div class="body" id="details">Select request.</div></div></div></section>
+<section class="home" id="home">
+  <div class="big shift" id="shiftBtn">
+    <h2>SHIFT</h2>
+    <p>Request shift time</p>
+  </div>
+  <div class="big hours" id="hoursBtn">
+    <h2>HOURS</h2>
+    <p>Request extra hours</p>
+  </div>
+</section>
+
+<section class="panel" id="shiftPanel">
+  <div class="panelTop">
+    <h2>Choose SHIFT time</h2>
+    <button class="btn gray" id="backShift">Back</button>
+  </div>
+  <div class="grid" id="shiftGrid"></div>
+</section>
+
+<section class="panel" id="hoursPanel">
+  <div class="panelTop">
+    <h2>Choose HOURS</h2>
+    <button class="btn gray" id="backHours">Back</button>
+  </div>
+  <div class="grid" id="hoursGrid"></div>
+</section>
+
+<section class="panel" id="bolPanel">
+  <div class="panelTop">
+    <h2>BOL required</h2>
+    <button class="btn gray" id="backBol">Back</button>
+  </div>
+  <p class="line">Please take/upload a BOL photo before sending request.</p>
+  <input class="input" id="bolFile" type="file" accept="image/*" capture="environment">
+  <img id="bolPreview" class="preview" style="display:none">
+  <button class="btn blue" id="continueAfterBol">Continue</button>
+</section>
+
+<section class="waiting" id="waiting">
+  <div class="status">
+    <h2>REQUEST SENT</h2>
+    <p id="requestText"></p>
+    <div class="timer" id="timer">00:00:00</div>
+    <p>Waiting for operator...</p>
+  </div>
+</section>
+
+<section class="working" id="working">
+  <div class="status">
+    <h2>OPERATOR IS WORKING</h2>
+    <p id="workingText"></p>
+    <div class="timer" id="timerBlue">00:00:00</div>
+    <p>Please wait until operator finishes.</p>
+  </div>
+</section>
+
+<section class="admin" id="admin">
+  <div class="layout">
+    <div class="box">
+      <div class="boxHead">
+        <h2>Requests</h2>
+        <span id="count">0</span>
+      </div>
+      <div class="list" id="requestList"></div>
+    </div>
+    <div class="box">
+      <div class="boxHead">
+        <h2>Details</h2>
+        <span id="roleBadge"></span>
+      </div>
+      <div class="body" id="details">Select request.</div>
+    </div>
+  </div>
+</section>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, setDoc, updateDoc, runTransaction, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const firebaseConfig={apiKey:"AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",authDomain:"bamboo-bulwark-459920-p2.firebaseapp.com",projectId:"bamboo-bulwark-459920-p2",storageBucket:"bamboo-bulwark-459920-p2.firebasestorage.app",messagingSenderId:"740396048112",appId:"1:740396048112:web:72874b77b37bff2f3e2c35"};
-const app=initializeApp(firebaseConfig);const db=getFirestore(app);const $=id=>document.getElementById(id);
-let user=null,requests=[],selectedId=null,activeId=localStorage.getItem('activeRequestId'),timerInt=null,startTime=null,pendingBol=null,nextPanel=null;
+const firebaseConfig = {
+  apiKey: "AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",
+  authDomain: "bamboo-bulwark-459920-p2.firebaseapp.com",
+  projectId: "bamboo-bulwark-459920-p2",
+  storageBucket: "bamboo-bulwark-459920-p2.firebasestorage.app",
+  messagingSenderId: "740396048112",
+  appId: "1:740396048112:web:72874b77b37bff2f3e2c35"
+};
 
-$('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('back1').onclick=showHome;$('back2').onclick=showHome;$('back3').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return} if(nextPanel) nextPanel();};$('bolFile').onchange=readBol;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
 
-onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{requests=snap.docs.map(d=>({id:d.id,...d.data()}));if(user?.role==='customer')refreshCustomer();if(user?.role==='admin'||user?.role==='super_admin')renderAdmin();});
+let user = null;
+let requests = [];
+let selectedId = null;
+let activeId = localStorage.getItem('activeRequestId');
+let timerInt = null;
+let startTime = null;
+let pendingBol = null;
+let nextPanel = null;
 
-async function login(){const u=$('loginUsername').value.trim();const p=$('loginPassword').value.trim();const ref=doc(db,'users',u);const snap=await getDoc(ref);if(!snap.exists()){$('loginError').innerText='User not found';return}const data=snap.data();if(data.role!=='customer'&&data.password!==p){$('loginError').innerText='Wrong password';return}user=data;localStorage.setItem('user',JSON.stringify(user));$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText=(user.name||user.username)+' / '+user.role;if(user.role==='customer')refreshCustomer();else showAdmin();}
-function logout(){localStorage.removeItem('user');localStorage.removeItem('activeRequestId');location.reload()}
-const saved=localStorage.getItem('user');if(saved){user=JSON.parse(saved);$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText=(user.name||user.username)+' / '+user.role;if(user.role==='customer')refreshCustomer();else showAdmin();}
+$('loginBtn').onclick = login;
+$('logoutBtn').onclick = logout;
+$('shiftBtn').onclick = () => checkBolThen(openShift);
+$('hoursBtn').onclick = () => checkBolThen(openHours);
+$('backShift').onclick = showHome;
+$('backHours').onclick = showHome;
+$('backBol').onclick = showHome;
+$('continueAfterBol').onclick = () => {
+  if(!pendingBol){ alert('Please add BOL photo.'); return; }
+  if(nextPanel) nextPanel();
+};
+$('bolFile').onchange = readBol;
 
-function hideAll(){['home','shiftPanel','hoursPanel','bolPanel','waiting','working','admin'].forEach(id=>$(id).style.display='none')}
-function showHome(){hideAll();pendingBol=null;$('bolFile').value='';$('bolPreview').style.display='none';$('home').style.display='grid'}
-function showAdmin(){hideAll();$('admin').style.display='block';$('roleBadge').innerText=user.role;renderAdmin()}
-function getActive(){return requests.find(r=>r.id===activeId&&r.status!=='DONE')}
-function refreshCustomer(){const r=getActive();hideAll();if(!r){showHome();return}startTime=getDate(r.createdAt);if(r.status==='NEW'){$('requestText').innerText=r.type+' '+r.value;$('waiting').style.display='flex';startTimer()}else if(r.status==='TAKEN'){$('workingText').innerText=r.type+' '+r.value+' taken by '+(r.takenByName||'operator');$('working').style.display='flex';startTimer()}else{localStorage.removeItem('activeRequestId');activeId=null;showHome()}}
-function startTimer(){clearInterval(timerInt);timerInt=setInterval(()=>{const s=Math.max(0,Math.floor((new Date()-startTime)/1000));const h=String(Math.floor(s/3600)).padStart(2,'0'),m=String(Math.floor((s%3600)/60)).padStart(2,'0'),sec=String(s%60).padStart(2,'0');$('timer').innerText=h+':'+m+':'+sec;$('timerBlue').innerText=h+':'+m+':'+sec},1000)}
+onSnapshot(query(collection(db,'requests'), orderBy('createdAt','desc')), snap => {
+  requests = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  if(user?.role === 'customer') refreshCustomer();
+  if(user?.role === 'admin' || user?.role === 'super_admin') renderAdmin();
+}, err => {
+  alert('Firestore error: ' + err.message);
+});
 
-function checkBolThen(fn){if(user?.bolRequired){nextPanel=fn;hideAll();$('bolPanel').style.display='block'}else fn()}
-function readBol(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{pendingBol=reader.result;$('bolPreview').src=pendingBol;$('bolPreview').style.display='block'};reader.readAsDataURL(file)}
-function openShift(){hideAll();const grid=$('shiftGrid');grid.innerHTML='';const now=new Date();now.setMinutes(0,0,0);now.setHours(now.getHours()+1);for(let i=0;i<10;i++){const d=new Date(now.getTime()+i*3600000);let h=d.getHours();const ap=h>=12?'PM':'AM';h=h%12||12;const label=h+ap;grid.appendChild(choice(label,'shift',()=>sendRequest('SHIFT',label)))}$('shiftPanel').style.display='block'}
-function openHours(){hideAll();const grid=$('hoursGrid');grid.innerHTML='';for(let i=1;i<=8;i++){const label=i+'+';grid.appendChild(choice(label,'hours',()=>sendRequest('HOURS',label)))}$('hoursPanel').style.display='block'}
-function choice(text,cls,fn){const b=document.createElement('button');b.className='choice '+cls;b.innerText=text;b.onclick=fn;return b}
-async function sendRequest(type,value){const data={customerUsername:user.username,customerName:user.name||user.username,type,value,status:'NEW',createdAt:serverTimestamp(),takenByName:null,takenByUsername:null,doneByName:null,bolImage:pendingBol||null,messages:[{sender:user.name||'Customer',text:type+' '+value+' request sent.',createdAt:Date.now()}]};const ref=await addDoc(collection(db,'requests'),data);if(user.bolRequired)await updateDoc(doc(db,'users',user.username),{bolRequired:false});user.bolRequired=false;localStorage.setItem('user',JSON.stringify(user));activeId=ref.id;localStorage.setItem('activeRequestId',activeId);pendingBol=null;refreshCustomer()}
+async function login(){
+  const username = $('loginUsername').value.trim();
+  const password = $('loginPassword').value.trim();
+  const error = $('loginError');
+  error.innerText = '';
 
-function renderAdmin(){const list=$('requestList');$('count').innerText=requests.length;list.innerHTML='';const rank={NEW:1,TAKEN:2,DONE:3};const sorted=[...requests].sort((a,b)=>(rank[a.status]-rank[b.status])||(getDate(b.createdAt)-getDate(a.createdAt)));if(!selectedId&&sorted[0])selectedId=sorted[0].id;sorted.forEach(r=>{const div=document.createElement('div');div.className='card '+(r.status==='NEW'?'new':r.status==='TAKEN'?'taken':'done')+(r.id===selectedId?' sel':'');div.innerHTML='<b>'+esc(r.customerName)+'</b><br>'+r.type+' '+r.value+'<br>Status: '+r.status+'<br>Taken by: '+esc(r.takenByName||'-');div.onclick=()=>{selectedId=r.id;renderAdmin()};list.appendChild(div)});renderDetails()}
-function renderDetails(){const r=requests.find(x=>x.id===selectedId);if(!r){$('details').innerHTML='Select request.';return}const msgs=Array.isArray(r.messages)?r.messages:[];$('details').innerHTML=`<h2>${r.type} ${r.value}</h2><div class="line"><b>Customer:</b> ${esc(r.customerName)}</div><div class="line"><b>Status:</b> ${r.status}</div><div class="line"><b>Operator:</b> ${esc(r.takenByName||'-')}</div>${r.bolImage?`<div class="line"><b>BOL:</b><br><img src="${r.bolImage}" class="preview"></div>`:''}<div class="actions"><button class="btn blue" id="take">Preuzmi</button><button class="btn green" id="done">Završeno</button><button class="btn redbtn" id="bolReq">Require BOL next time</button></div><div class="chat">${msgs.map(m=>`<div class="msg"><b>${esc(m.sender)}:</b> ${esc(m.text)}</div>`).join('')}</div><div style="display:flex;gap:8px"><input class="input" id="chatInput" placeholder="Message"><button class="btn blue" id="sendMsg">Send</button></div>${user.role==='super_admin'?superAdminHtml():''}`;$('take').onclick=()=>takeRequest(r.id);$('done').onclick=()=>doneRequest(r.id);$('bolReq').onclick=()=>requireBol(r);$('sendMsg').onclick=()=>sendMsg(r.id);const au=$('addUser');if(au)au.onclick=addUser}
-function superAdminHtml(){return `<div class="superBox"><h3>Super Admin - Add user</h3><input class="input" id="newUsername" placeholder="username"><input class="input" id="newName" placeholder="name / company"><input class="input" id="newPassword" placeholder="password"><select id="newRole"><option value="admin">admin</option><option value="customer">customer</option><option value="super_admin">super_admin</option></select><button class="btn blue" id="addUser">Add user</button></div>`}
-async function takeRequest(id){await runTransaction(db,async t=>{const ref=doc(db,'requests',id);const s=await t.get(ref);if(!s.exists()||s.data().status!=='NEW')return;t.update(ref,{status:'TAKEN',takenByName:user.name,takenByUsername:user.username,takenAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Taken by '+user.name,createdAt:Date.now()})})})}
-async function doneRequest(id){await updateDoc(doc(db,'requests',id),{status:'DONE',doneByName:user.name,doneAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Finished by '+user.name,createdAt:Date.now()})})}
-async function requireBol(r){if(!r.customerUsername){alert('No customer username');return}await updateDoc(doc(db,'users',r.customerUsername),{bolRequired:true});await updateDoc(doc(db,'requests',r.id),{messages:arrayUnion({sender:'System',text:'BOL required enabled for next request.',createdAt:Date.now()})});alert('BOL ukljucen za '+r.customerName)}
-async function sendMsg(id){const input=$('chatInput');const text=input.value.trim();if(!text)return;await updateDoc(doc(db,'requests',id),{messages:arrayUnion({sender:user.name,text,createdAt:Date.now()})});input.value=''}
-async function addUser(){const username=$('newUsername').value.trim(),name=$('newName').value.trim(),password=$('newPassword').value.trim(),role=$('newRole').value;if(!username||!name)return alert('Popuni username i name');const data={username,name,role};if(role!=='customer')data.password=password||'1234';await setDoc(doc(db,'users',username),data);alert('User dodat: '+username)}
-function getDate(v){return v?.toDate?v.toDate():new Date(v||Date.now())}function esc(t){return String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+  if(!username){ error.innerText = 'Enter username'; return; }
+
+  const snap = await getDoc(doc(db,'users',username));
+  if(!snap.exists()){
+    error.innerText = 'User not found';
+    return;
+  }
+
+  const data = snap.data();
+  if(data.role !== 'customer' && data.password !== password){
+    error.innerText = 'Wrong password';
+    return;
+  }
+
+  user = data;
+  localStorage.setItem('user', JSON.stringify(user));
+  $('loginScreen').style.display='none';
+  $('logoutBtn').style.display='block';
+  $('userInfo').innerText = (user.name || user.username) + ' / ' + user.role;
+
+  if(user.role === 'customer') refreshCustomer();
+  else showAdmin();
+}
+
+function logout(){
+  localStorage.removeItem('user');
+  localStorage.removeItem('activeRequestId');
+  location.reload();
+}
+
+const savedUser = localStorage.getItem('user');
+if(savedUser){
+  user = JSON.parse(savedUser);
+  $('loginScreen').style.display='none';
+  $('logoutBtn').style.display='block';
+  $('userInfo').innerText = (user.name || user.username) + ' / ' + user.role;
+  if(user.role === 'customer') refreshCustomer();
+  else showAdmin();
+}
+
+function hideAll(){
+  ['home','shiftPanel','hoursPanel','bolPanel','waiting','working','admin'].forEach(id => $(id).style.display='none');
+}
+
+function showHome(){
+  hideAll();
+  pendingBol = null;
+  nextPanel = null;
+  $('bolFile').value = '';
+  $('bolPreview').style.display='none';
+  $('home').style.display='grid';
+}
+
+function showAdmin(){
+  hideAll();
+  $('admin').style.display='block';
+  $('roleBadge').innerText = user.role;
+  renderAdmin();
+}
+
+function getActiveCustomerRequest(){
+  return requests.find(r => r.customerUsername === user.username && r.status !== 'DONE');
+}
+
+function refreshCustomer(){
+  const r = getActiveCustomerRequest();
+  hideAll();
+
+  if(!r){
+    localStorage.removeItem('activeRequestId');
+    activeId = null;
+    showHome();
+    return;
+  }
+
+  activeId = r.id;
+  localStorage.setItem('activeRequestId', activeId);
+  startTime = getDate(r.createdAt);
+
+  if(r.status === 'NEW'){
+    $('requestText').innerText = r.type + ' ' + r.value;
+    $('waiting').style.display='flex';
+    startTimer();
+  } else if(r.status === 'TAKEN'){
+    $('workingText').innerText = r.type + ' ' + r.value + ' taken by ' + (r.takenByName || 'operator');
+    $('working').style.display='flex';
+    startTimer();
+  } else {
+    localStorage.removeItem('activeRequestId');
+    activeId = null;
+    showHome();
+  }
+}
+
+function startTimer(){
+  clearInterval(timerInt);
+  timerInt = setInterval(() => {
+    const seconds = Math.max(0, Math.floor((new Date() - startTime) / 1000));
+    const h = String(Math.floor(seconds / 3600)).padStart(2,'0');
+    const m = String(Math.floor((seconds % 3600) / 60)).padStart(2,'0');
+    const s = String(seconds % 60).padStart(2,'0');
+    $('timer').innerText = h + ':' + m + ':' + s;
+    $('timerBlue').innerText = h + ':' + m + ':' + s;
+  }, 1000);
+}
+
+function checkBolThen(fn){
+  if(user?.bolRequired){
+    nextPanel = fn;
+    hideAll();
+    $('bolPanel').style.display='block';
+  } else {
+    fn();
+  }
+}
+
+function readBol(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingBol = reader.result;
+    $('bolPreview').src = pendingBol;
+    $('bolPreview').style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function openShift(){
+  hideAll();
+  const grid = $('shiftGrid');
+  grid.innerHTML = '';
+  const now = new Date();
+  now.setMinutes(0,0,0);
+  now.setHours(now.getHours()+1);
+
+  for(let i=0;i<10;i++){
+    const d = new Date(now.getTime() + i*3600000);
+    let h = d.getHours();
+    const ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    const label = h + ap;
+    grid.appendChild(choice(label, 'shift', () => sendRequest('SHIFT', label)));
+  }
+  $('shiftPanel').style.display='block';
+}
+
+function openHours(){
+  hideAll();
+  const grid = $('hoursGrid');
+  grid.innerHTML = '';
+  for(let i=1;i<=8;i++){
+    const label = i + '+';
+    grid.appendChild(choice(label, 'hours', () => sendRequest('HOURS', label)));
+  }
+  $('hoursPanel').style.display='block';
+}
+
+function choice(text, cls, fn){
+  const b = document.createElement('button');
+  b.className = 'choice ' + cls;
+  b.innerText = text;
+  b.onclick = fn;
+  return b;
+}
+
+async function sendRequest(type, value){
+  const existing = getActiveCustomerRequest();
+
+  if(existing){
+    await updateDoc(doc(db,'requests',existing.id), {
+      type: existing.type,
+      value: existing.value,
+      messages: arrayUnion({
+        sender: user.name || user.username,
+        text: type + ' ' + value + ' additional request',
+        createdAt: Date.now(),
+        bolImage: pendingBol || null
+      })
+    });
+
+    if(user.bolRequired){
+      await updateDoc(doc(db,'users',user.username), {bolRequired:false});
+      user.bolRequired = false;
+      localStorage.setItem('user', JSON.stringify(user));
+    }
+
+    pendingBol = null;
+    alert('Request dodat u postojeći ticket.');
+    refreshCustomer();
+    return;
+  }
+
+  const data = {
+    customerUsername: user.username,
+    customerName: user.name || user.username,
+    type,
+    value,
+    status:'NEW',
+    createdAt: serverTimestamp(),
+    takenByName:null,
+    takenByUsername:null,
+    doneByName:null,
+    bolImage: pendingBol || null,
+    messages:[{
+      sender: user.name || user.username,
+      text: type + ' ' + value + ' request sent.',
+      createdAt: Date.now(),
+      bolImage: pendingBol || null
+    }]
+  };
+
+  const ref = await addDoc(collection(db,'requests'), data);
+
+  if(user.bolRequired){
+    await updateDoc(doc(db,'users',user.username), {bolRequired:false});
+    user.bolRequired = false;
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+
+  activeId = ref.id;
+  localStorage.setItem('activeRequestId', activeId);
+  pendingBol = null;
+  refreshCustomer();
+}
+
+function renderAdmin(){
+  const list = $('requestList');
+  $('count').innerText = requests.length;
+  list.innerHTML = '';
+
+  const rank = {NEW:1, TAKEN:2, DONE:3};
+  const sorted = [...requests].sort((a,b) => {
+    const r = (rank[a.status] || 9) - (rank[b.status] || 9);
+    if(r !== 0) return r;
+    return getDate(b.createdAt) - getDate(a.createdAt);
+  });
+
+  if(!selectedId && sorted[0]) selectedId = sorted[0].id;
+
+  if(sorted.length === 0){
+    list.innerHTML = '<div class="line">No requests yet.</div>';
+  }
+
+  sorted.forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'card ' + (r.status==='NEW'?'new':r.status==='TAKEN'?'taken':'done') + (r.id===selectedId?' sel':'');
+    div.innerHTML = `
+      <b>${esc(r.customerName)}</b><br>
+      ${esc(r.type)} ${esc(r.value)}<br>
+      Status: ${esc(r.status)}<br>
+      Taken by: ${esc(r.takenByName || '-')}
+    `;
+    div.onclick = () => { selectedId = r.id; renderAdmin(); };
+    list.appendChild(div);
+  });
+
+  renderDetails();
+}
+
+function renderDetails(){
+  const r = requests.find(x => x.id === selectedId);
+  if(!r){
+    $('details').innerHTML = 'Select request.';
+    return;
+  }
+
+  const isSuper = user.role === 'super_admin';
+  $('details').innerHTML = `
+    <div class="tabs">
+      <button class="btn blue" id="tabChat">Chat</button>
+      ${isSuper ? '<button class="btn gray" id="tabUsers">Add User</button>' : ''}
+    </div>
+    <div id="tabContent"></div>
+  `;
+
+  $('tabChat').onclick = () => renderChatTab(r);
+  if(isSuper) $('tabUsers').onclick = renderUserTab;
+  renderChatTab(r);
+}
+
+function renderChatTab(r){
+  const msgs = Array.isArray(r.messages) ? r.messages : [];
+  const takeDisabled = r.status !== 'NEW';
+  const doneDisabled = r.status === 'DONE';
+
+  $('tabContent').innerHTML = `
+    <h2>${esc(r.type)} ${esc(r.value)}</h2>
+    <div class="line"><b>Customer:</b> ${esc(r.customerName)}</div>
+    <div class="line"><b>Status:</b> ${esc(r.status)}</div>
+    <div class="line"><b>Operator:</b> ${esc(r.takenByName || '-')}</div>
+    <div class="line"><b>Done by:</b> ${esc(r.doneByName || '-')}</div>
+    ${r.bolImage ? `<div class="line"><b>BOL:</b><br><img src="${r.bolImage}" class="preview"></div>` : ''}
+
+    <div class="actions">
+      <button class="btn blue ${takeDisabled?'disabled':''}" id="takeBtn" ${takeDisabled?'disabled':''}>Preuzmi</button>
+      <button class="btn green ${doneDisabled?'disabled':''}" id="doneBtn" ${doneDisabled?'disabled':''}>Završeno</button>
+      <button class="btn redbtn" id="bolReqBtn">Require BOL next time</button>
+    </div>
+
+    <div class="chat">
+      ${msgs.map(m => `
+        <div class="msg">
+          <b>${esc(m.sender)}:</b> ${esc(m.text)}
+          ${m.bolImage ? `<br><img src="${m.bolImage}" class="preview">` : ''}
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <input class="input" id="chatInput" placeholder="Message">
+      <button class="btn blue" id="sendMsgBtn">Send</button>
+    </div>
+  `;
+
+  $('takeBtn').onclick = () => takeRequest(r.id);
+  $('doneBtn').onclick = () => doneRequest(r.id);
+  $('bolReqBtn').onclick = () => requireBol(r);
+  $('sendMsgBtn').onclick = () => sendMsg(r.id);
+  $('chatInput').onkeydown = e => { if(e.key === 'Enter') sendMsg(r.id); };
+}
+
+function renderUserTab(){
+  $('tabContent').innerHTML = `
+    <h2>Add User</h2>
+    <input class="input" id="newUsername" placeholder="username">
+    <input class="input" id="newName" placeholder="name / company">
+    <input class="input" id="newPassword" placeholder="password">
+    <select id="newRole">
+      <option value="admin">admin</option>
+      <option value="customer">customer</option>
+      <option value="super_admin">super_admin</option>
+    </select>
+    <button class="btn blue" id="addUserBtn">Add user</button>
+    <p class="note">Za customer password može da ostane prazan.</p>
+    <p id="addUserStatus"></p>
+  `;
+  $('addUserBtn').onclick = addUser;
+}
+
+async function takeRequest(id){
+  await runTransaction(db, async transaction => {
+    const ref = doc(db,'requests',id);
+    const snap = await transaction.get(ref);
+    if(!snap.exists()) return;
+    const data = snap.data();
+    if(data.status !== 'NEW') return;
+
+    transaction.update(ref, {
+      status:'TAKEN',
+      takenByName: user.name || user.username,
+      takenByUsername: user.username,
+      takenAt: serverTimestamp(),
+      messages: arrayUnion({
+        sender:'System',
+        text:'Taken by ' + (user.name || user.username),
+        createdAt: Date.now()
+      })
+    });
+  });
+}
+
+async function doneRequest(id){
+  await updateDoc(doc(db,'requests',id), {
+    status:'DONE',
+    doneByName: user.name || user.username,
+    doneAt: serverTimestamp(),
+    messages: arrayUnion({
+      sender:'System',
+      text:'Finished by ' + (user.name || user.username),
+      createdAt: Date.now()
+    })
+  });
+}
+
+async function requireBol(r){
+  if(!r.customerUsername){
+    alert('No customer username.');
+    return;
+  }
+  await updateDoc(doc(db,'users',r.customerUsername), {bolRequired:true});
+  await updateDoc(doc(db,'requests',r.id), {
+    messages: arrayUnion({
+      sender:'System',
+      text:'BOL required enabled for next request.',
+      createdAt: Date.now()
+    })
+  });
+  alert('BOL uključen za: ' + r.customerName);
+}
+
+async function sendMsg(id){
+  const input = $('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  await updateDoc(doc(db,'requests',id), {
+    messages: arrayUnion({
+      sender: user.name || user.username,
+      text,
+      createdAt: Date.now()
+    })
+  });
+  input.value = '';
+}
+
+async function addUser(){
+  const username = $('newUsername').value.trim();
+  const name = $('newName').value.trim();
+  const password = $('newPassword').value.trim();
+  const role = $('newRole').value;
+  const status = $('addUserStatus');
+
+  if(!username || !name){
+    status.className='error';
+    status.innerText='Popuni username i name.';
+    return;
+  }
+
+  const data = { username, name, role, active:true };
+  if(role !== 'customer') data.password = password || '1234';
+  if(role === 'customer') data.bolRequired = false;
+
+  await setDoc(doc(db,'users',username), data);
+
+  status.className='success';
+  status.innerText='User dodat: ' + username;
+  $('newUsername').value='';
+  $('newName').value='';
+  $('newPassword').value='';
+}
+
+function getDate(v){
+  if(v?.toDate) return v.toDate();
+  if(typeof v === 'number') return new Date(v);
+  return new Date(v || Date.now());
+}
+
+function esc(t){
+  return String(t || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
 </script>
 </body>
 </html>
