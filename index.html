@@ -157,6 +157,24 @@ onSnapshot(query(collection(db,'requests'), orderBy('createdAt','desc')), snap =
 
 onSnapshot(collection(db,'users'), snap => {
   allUsers = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  if(user && allUsers.length){
+    const freshUser = allUsers.find(u => u.username === user.username);
+    if(freshUser){
+      user = freshUser;
+      localStorage.setItem('user', JSON.stringify(user));
+      $('userInfo').innerText = (user.name || user.username) + ' / ' + user.role;
+    }
+  }
+  if(user?.role === 'customer') refreshCustomer();
+  if(user && allUsers.length){
+    const freshUser = allUsers.find(u => u.username === user.username);
+    if(freshUser){
+      user = freshUser;
+      localStorage.setItem('user', JSON.stringify(user));
+      $('userInfo').innerText = (user.name || user.username) + ' / ' + user.role;
+    }
+  }
+  if(user?.role === 'customer') refreshCustomer();
   if(user?.role === 'super_admin') renderAdmin();
 });
 
@@ -298,7 +316,7 @@ function readBol(e){
   reader.onload = event => {
     const img = new Image();
     img.onload = () => {
-      const maxSize = 900;
+      const maxSize = 600;
       let width = img.width;
       let height = img.height;
 
@@ -316,7 +334,7 @@ function readBol(e){
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
 
-      pendingBol = canvas.toDataURL('image/jpeg', 0.55);
+      pendingBol = canvas.toDataURL('image/jpeg', 0.35);
       $('bolPreview').src = pendingBol;
       $('bolPreview').style.display='block';
     };
@@ -365,6 +383,8 @@ function choice(text, cls, fn){
 
 async function sendRequest(type, value){
   const existing = getCustomerTicket();
+  try{
+  try{
 
   if(existing){
     await updateDoc(doc(db,'requests',existing.id), {
@@ -429,6 +449,9 @@ async function sendRequest(type, value){
   localStorage.setItem('activeRequestId', activeId);
   pendingBol = null;
   refreshCustomer();
+  } catch(err){
+    alert('Greška kod slanja requesta/BOL slike: ' + err.message + '\nAko je slika velika, slikaj malo dalje ili pošalji manju sliku.');
+  }
 }
 
 function renderAdmin(){
@@ -502,6 +525,9 @@ function renderChatTab(r){
     <h2>${esc(r.type)} ${esc(r.value)}</h2>
     <div class="line"><b>Customer:</b> ${esc(r.customerName)}</div>
     <div class="line"><b>Status:</b> ${esc(r.status)}</div>
+    <div class="line"><b>Created:</b> ${formatDate(r.createdAt)}</div>
+    <div class="line"><b>Taken at:</b> ${formatDate(r.takenAt)}</div>
+    <div class="line"><b>Done at:</b> ${formatDate(r.doneAt)}</div>
     <div class="line"><b>Operator:</b> ${esc(r.takenByName || '-')}</div>
     <div class="line"><b>Done by:</b> ${esc(r.doneByName || '-')}</div>
     ${r.bolImage ? `<div class="line"><b>BOL:</b><br><img src="${r.bolImage}" class="preview"></div>` : ''}
@@ -515,7 +541,7 @@ function renderChatTab(r){
     <div class="chat">
       ${msgs.map(m => `
         <div class="msg">
-          <b>${esc(m.sender)}:</b> ${esc(m.text)}
+          <b>${esc(m.sender)}:</b> ${esc(m.text)} <span class="mini">(${formatDate(m.createdAt)})</span> <span class="mini">(${formatDate(m.createdAt)})</span>
           ${m.bolImage ? `<br><img src="${m.bolImage}" class="preview">` : ''}
         </div>
       `).join('')}
@@ -723,6 +749,12 @@ function getDate(v){
   if(v?.toDate) return v.toDate();
   if(typeof v === 'number') return new Date(v);
   return new Date(v || Date.now());
+}
+
+function formatDate(v){
+  if(!v) return '-';
+  const d = getDate(v);
+  return d.toLocaleString([], {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
 }
 
 function esc(t){
