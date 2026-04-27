@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Communicator - Customer Screen</title>
+<title>Communicator Demo</title>
 <style>
 *{
   box-sizing:border-box;
@@ -22,12 +22,13 @@ body{
   flex-direction:column;
 }
 .header{
-  padding:18px 24px;
+  padding:16px 22px;
   background:#020617;
   border-bottom:1px solid #1f2937;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  gap:12px;
 }
 .header h1{
   font-size:24px;
@@ -36,6 +37,23 @@ body{
 .header span{
   color:#94a3b8;
   font-size:14px;
+}
+.nav-buttons{
+  display:flex;
+  gap:8px;
+}
+.nav-buttons button{
+  border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  background:#1e293b;
+  color:#e5e7eb;
+}
+.nav-buttons button.active{
+  background:#38bdf8;
+  color:#020617;
 }
 .home{
   flex:1;
@@ -71,7 +89,7 @@ body{
   font-weight:bold;
 }
 .panel{
-  min-height:100vh;
+  min-height:calc(100vh - 70px);
   display:none;
   flex-direction:column;
   padding:24px;
@@ -81,6 +99,7 @@ body{
   justify-content:space-between;
   align-items:center;
   margin-bottom:24px;
+  gap:12px;
 }
 .panel-top h2{
   font-size:32px;
@@ -120,7 +139,7 @@ body{
 }
 .waiting,
 .working{
-  min-height:100vh;
+  min-height:calc(100vh - 70px);
   display:none;
   align-items:center;
   justify-content:center;
@@ -146,33 +165,177 @@ body{
   font-weight:bold;
   margin:24px 0;
 }
-.demo-admin{
-  position:fixed;
-  right:20px;
-  bottom:20px;
+.admin-screen{
+  display:none;
+  min-height:calc(100vh - 70px);
+  padding:22px;
+  background:#0f172a;
+}
+.admin-layout{
+  display:grid;
+  grid-template-columns:360px 1fr;
+  gap:18px;
+  height:calc(100vh - 114px);
+}
+.request-list,
+.request-details{
   background:#020617;
-  border:1px solid #334155;
+  border:1px solid #1f2937;
+  border-radius:18px;
+  overflow:hidden;
+}
+.section-title{
+  padding:16px;
+  border-bottom:1px solid #1f2937;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.section-title h2{
+  font-size:20px;
+}
+.badge{
+  background:#1e293b;
+  color:#cbd5e1;
+  padding:5px 9px;
+  border-radius:999px;
+  font-size:12px;
+}
+.requests{
+  height:calc(100% - 57px);
+  overflow:auto;
+  padding:12px;
+}
+.req-card{
   padding:14px;
   border-radius:14px;
-  display:none;
-  gap:10px;
+  margin-bottom:10px;
+  cursor:pointer;
+  border:2px solid transparent;
 }
-.demo-admin button{
+.req-card.selected{
+  border-color:#38bdf8;
+}
+.req-card h3{
+  font-size:17px;
+  margin-bottom:6px;
+}
+.req-card p{
+  font-size:13px;
+  color:#e5e7eb;
+  margin-bottom:4px;
+}
+.new-bg{
+  background:#7f1d1d;
+}
+.taken-bg{
+  background:#1d4ed8;
+}
+.done-bg{
+  background:#166534;
+}
+.details-body{
+  padding:20px;
+}
+.empty{
+  color:#94a3b8;
+  text-align:center;
+  margin-top:60px;
+}
+.detail-status{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:bold;
+  margin-bottom:14px;
+}
+.detail-title{
+  font-size:34px;
+  margin-bottom:12px;
+}
+.detail-line{
+  color:#cbd5e1;
+  margin-bottom:8px;
+  font-size:17px;
+}
+.admin-actions{
+  display:flex;
+  gap:10px;
+  margin:20px 0;
+  flex-wrap:wrap;
+}
+.admin-actions button{
   border:none;
-  padding:10px 12px;
-  border-radius:8px;
+  padding:12px 16px;
+  border-radius:10px;
   cursor:pointer;
   font-weight:bold;
 }
-.take{
-  background:#2563eb;
-  color:white;
+.take-btn{
+  background:#38bdf8;
+  color:#020617;
 }
-.done{
-  background:#16a34a;
-  color:white;
+.done-btn{
+  background:#22c55e;
+  color:#022c22;
 }
-@media(max-width:700px){
+.disabled-btn{
+  opacity:0.45;
+  cursor:not-allowed !important;
+}
+.chat-box{
+  margin-top:20px;
+  border-top:1px solid #1f2937;
+  padding-top:15px;
+}
+.chat-messages{
+  min-height:150px;
+  max-height:230px;
+  overflow:auto;
+  background:#0f172a;
+  border:1px solid #1f2937;
+  border-radius:12px;
+  padding:12px;
+  margin-bottom:10px;
+}
+.message{
+  background:#1e293b;
+  padding:9px 11px;
+  border-radius:10px;
+  margin-bottom:8px;
+  font-size:14px;
+}
+.chat-input{
+  display:flex;
+  gap:8px;
+}
+.chat-input input{
+  flex:1;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #334155;
+  background:#0f172a;
+  color:#fff;
+}
+.chat-input button{
+  border:none;
+  padding:12px 14px;
+  border-radius:10px;
+  background:#38bdf8;
+  color:#020617;
+  font-weight:bold;
+  cursor:pointer;
+}
+.small-note{
+  color:#94a3b8;
+  font-size:13px;
+  margin-top:10px;
+}
+@media(max-width:850px){
+  .header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
   .home{
     grid-template-columns:1fr;
   }
@@ -184,6 +347,15 @@ body{
   }
   .choice{
     font-size:30px;
+    min-height:90px;
+  }
+  .admin-layout{
+    grid-template-columns:1fr;
+    height:auto;
+  }
+  .request-list,
+  .request-details{
+    min-height:330px;
   }
 }
 </style>
@@ -191,8 +363,14 @@ body{
 <body>
 <div class="app">
   <div class="header" id="header">
-    <h1>Communicator</h1>
-    <span>Customer Screen</span>
+    <div>
+      <h1>Communicator</h1>
+      <span id="screenLabel">Customer Screen</span>
+    </div>
+    <div class="nav-buttons">
+      <button id="customerNav" class="active" onclick="showCustomerMode()">Customer</button>
+      <button id="adminNav" onclick="showAdminMode()">Admin</button>
+    </div>
   </div>
 
   <section class="home" id="home">
@@ -239,19 +417,38 @@ body{
       <p>Please wait until operator finishes.</p>
     </div>
   </section>
-</div>
 
-<div class="demo-admin" id="demoAdmin">
-  <button class="take" onclick="takeRequest()">Demo: Take</button>
-  <button class="done" onclick="finishRequest()">Demo: Done</button>
+  <section class="admin-screen" id="adminScreen">
+    <div class="admin-layout">
+      <div class="request-list">
+        <div class="section-title">
+          <h2>Requests</h2>
+          <span class="badge" id="requestCount">0</span>
+        </div>
+        <div class="requests" id="requestsList"></div>
+      </div>
+
+      <div class="request-details">
+        <div class="section-title">
+          <h2>Request Details</h2>
+          <span class="badge">Demo Admin</span>
+        </div>
+        <div class="details-body" id="detailsBody">
+          <div class="empty">Select a request from the list.</div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
-let currentRequest = null;
+let requests = [];
+let selectedRequestId = null;
+let customerActiveRequestId = null;
 let startTime = null;
 let timerInterval = null;
 
-function hideAll(){
+function hideCustomerScreens(){
   document.getElementById('home').style.display='none';
   document.getElementById('shiftPanel').style.display='none';
   document.getElementById('hoursPanel').style.display='none';
@@ -259,22 +456,57 @@ function hideAll(){
   document.getElementById('working').style.display='none';
 }
 
+function hideAllScreens(){
+  hideCustomerScreens();
+  document.getElementById('adminScreen').style.display='none';
+}
+
+function setNav(mode){
+  document.getElementById('customerNav').classList.toggle('active', mode === 'customer');
+  document.getElementById('adminNav').classList.toggle('active', mode === 'admin');
+  document.getElementById('screenLabel').innerText = mode === 'customer' ? 'Customer Screen' : 'Admin Screen';
+}
+
+function showCustomerMode(){
+  hideAllScreens();
+  setNav('customer');
+  const activeReq = getCustomerActiveRequest();
+  if(activeReq && activeReq.status === 'NEW'){
+    document.getElementById('requestText').innerText=activeReq.type+' request: '+activeReq.value;
+    document.getElementById('waiting').style.display='flex';
+    startTime = activeReq.createdAt;
+    startTimer();
+  } else if(activeReq && activeReq.status === 'TAKEN'){
+    document.getElementById('workingText').innerText=activeReq.type+' '+activeReq.value+' is taken by '+activeReq.takenBy+'.';
+    document.getElementById('working').style.display='flex';
+    startTime = activeReq.createdAt;
+    startTimer();
+  } else {
+    goHome();
+  }
+}
+
+function showAdminMode(){
+  hideAllScreens();
+  setNav('admin');
+  document.getElementById('adminScreen').style.display='block';
+  renderAdmin();
+}
+
 function goHome(){
-  hideAll();
+  hideCustomerScreens();
   document.getElementById('home').style.display='grid';
-  document.getElementById('demoAdmin').style.display='none';
-  currentRequest=null;
   clearInterval(timerInterval);
 }
 
 function openShift(){
-  hideAll();
+  hideCustomerScreens();
   buildShiftTimes();
   document.getElementById('shiftPanel').style.display='flex';
 }
 
 function openHours(){
-  hideAll();
+  hideCustomerScreens();
   buildHours();
   document.getElementById('hoursPanel').style.display='flex';
 }
@@ -316,13 +548,29 @@ function buildHours(){
 }
 
 function sendRequest(type,value){
-  currentRequest={type,value,status:'NEW'};
-  startTime=new Date();
-  hideAll();
+  const request = {
+    id: Date.now(),
+    customerName: 'Demo Customer',
+    type: type,
+    value: value,
+    status: 'NEW',
+    createdAt: new Date(),
+    takenAt: null,
+    doneAt: null,
+    takenBy: null,
+    messages: [
+      { sender:'Customer', text:type+' '+value+' request sent.' }
+    ]
+  };
+  requests.push(request);
+  selectedRequestId = request.id;
+  customerActiveRequestId = request.id;
+  startTime=request.createdAt;
+  hideCustomerScreens();
   document.getElementById('requestText').innerText=type+' request: '+value;
   document.getElementById('waiting').style.display='flex';
-  document.getElementById('demoAdmin').style.display='flex';
   startTimer();
+  renderAdmin();
 }
 
 function startTimer(){
@@ -337,19 +585,161 @@ function startTimer(){
   },1000);
 }
 
-function takeRequest(){
-  if(!currentRequest)return;
-  currentRequest.status='TAKEN';
-  hideAll();
-  document.getElementById('workingText').innerText=currentRequest.type+' '+currentRequest.value+' is taken by operator.';
-  document.getElementById('working').style.display='flex';
+function getCustomerActiveRequest(){
+  return requests.find(r => r.id === customerActiveRequestId && r.status !== 'DONE');
 }
 
-function finishRequest(){
-  goHome();
+function getSortedRequests(){
+  const rank = { 'NEW': 1, 'TAKEN': 2, 'DONE': 3 };
+  return [...requests].sort((a,b)=>{
+    if(rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
+    return b.createdAt - a.createdAt;
+  });
 }
 
-goHome();
+function statusClass(status){
+  if(status === 'NEW') return 'new-bg';
+  if(status === 'TAKEN') return 'taken-bg';
+  return 'done-bg';
+}
+
+function renderAdmin(){
+  const list = document.getElementById('requestsList');
+  const count = document.getElementById('requestCount');
+  if(!list || !count) return;
+
+  const sorted = getSortedRequests();
+  count.innerText = requests.length;
+  list.innerHTML = '';
+
+  if(sorted.length === 0){
+    list.innerHTML = '<div class="empty">No requests yet.</div>';
+    renderDetails();
+    return;
+  }
+
+  sorted.forEach(r=>{
+    const div = document.createElement('div');
+    div.className = 'req-card '+statusClass(r.status)+(r.id===selectedRequestId?' selected':'');
+    div.onclick = ()=>selectRequest(r.id);
+    div.innerHTML = `
+      <h3>${r.customerName}</h3>
+      <p><b>${r.type}</b> ${r.value}</p>
+      <p>Status: <b>${r.status}</b></p>
+      <p>${formatElapsed(r.createdAt)} ago</p>
+    `;
+    list.appendChild(div);
+  });
+  renderDetails();
+}
+
+function selectRequest(id){
+  selectedRequestId = id;
+  renderAdmin();
+}
+
+function renderDetails(){
+  const body = document.getElementById('detailsBody');
+  if(!body) return;
+  const r = requests.find(x=>x.id===selectedRequestId);
+
+  if(!r){
+    body.innerHTML = '<div class="empty">Select a request from the list.</div>';
+    return;
+  }
+
+  const takeDisabled = r.status !== 'NEW';
+  const doneDisabled = r.status === 'DONE';
+  const takenText = r.takenBy ? r.takenBy : '-';
+
+  body.innerHTML = `
+    <span class="detail-status ${statusClass(r.status)}">${r.status}</span>
+    <div class="detail-title">${r.type} ${r.value}</div>
+    <div class="detail-line"><b>Customer:</b> ${r.customerName}</div>
+    <div class="detail-line"><b>Created:</b> ${r.createdAt.toLocaleString()}</div>
+    <div class="detail-line"><b>Taken by:</b> ${takenText}</div>
+
+    <div class="admin-actions">
+      <button class="take-btn ${takeDisabled?'disabled-btn':''}" onclick="takeRequest(${r.id})" ${takeDisabled?'disabled':''}>Preuzmi</button>
+      <button class="done-btn ${doneDisabled?'disabled-btn':''}" onclick="finishRequest(${r.id})" ${doneDisabled?'disabled':''}>Završeno</button>
+    </div>
+
+    <div class="small-note">
+      Pravilo: kada jedan admin klikne Preuzmi, zahtev postaje plav i drugi više ne mogu da ga preuzmu.
+    </div>
+
+    <div class="chat-box">
+      <h3>Chat</h3>
+      <div class="chat-messages" id="chatMessages">
+        ${r.messages.map(m=>`<div class="message"><b>${m.sender}:</b> ${escapeHtml(m.text)}</div>`).join('')}
+      </div>
+      <div class="chat-input">
+        <input id="chatInput" placeholder="Type admin message..." onkeydown="if(event.key==='Enter') sendAdminMessage(${r.id})">
+        <button onclick="sendAdminMessage(${r.id})">Send</button>
+      </div>
+    </div>
+  `;
+}
+
+function takeRequest(id){
+  const r = requests.find(x=>x.id===id);
+  if(!r || r.status !== 'NEW') return;
+  r.status = 'TAKEN';
+  r.takenBy = 'Demo Admin';
+  r.takenAt = new Date();
+  r.messages.push({sender:'Admin', text:'Request taken.'});
+  selectedRequestId = id;
+
+  if(customerActiveRequestId === id){
+    document.getElementById('workingText').innerText=r.type+' '+r.value+' is taken by '+r.takenBy+'.';
+  }
+  renderAdmin();
+}
+
+function finishRequest(id){
+  const r = requests.find(x=>x.id===id);
+  if(!r || r.status === 'DONE') return;
+  r.status = 'DONE';
+  r.doneAt = new Date();
+  r.messages.push({sender:'Admin', text:'Request finished.'});
+
+  if(customerActiveRequestId === id){
+    customerActiveRequestId = null;
+    showCustomerMode();
+  }
+  renderAdmin();
+}
+
+function sendAdminMessage(id){
+  const input = document.getElementById('chatInput');
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text) return;
+  const r = requests.find(x=>x.id===id);
+  if(!r) return;
+  r.messages.push({sender:'Admin', text:text});
+  input.value='';
+  renderDetails();
+}
+
+function formatElapsed(date){
+  const diff=Math.floor((new Date()-date)/1000);
+  if(diff < 60) return diff+'s';
+  if(diff < 3600) return Math.floor(diff/60)+'m';
+  return Math.floor(diff/3600)+'h';
+}
+
+function escapeHtml(text){
+  return text.replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+setInterval(()=>{
+  if(document.getElementById('adminScreen').style.display === 'block') renderAdmin();
+}, 1000);
+
+showCustomerMode();
 </script>
 </body>
 </html>
