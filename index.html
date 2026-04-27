@@ -328,6 +328,8 @@ function renderChatTab(r){
   const msgs = Array.isArray(r.messages) ? r.messages : [];
   const isTakenByOther = r.status === 'TAKEN' && r.takenByUsername && r.takenByUsername !== user.username;
   const canWork = r.status === 'NEW' || (r.status === 'TAKEN' && r.takenByUsername === user.username);
+  const canRequestBol = r.status === 'NEW' || r.status === 'DONE' || (r.status === 'TAKEN' && r.takenByUsername === user.username);
+  const canRequestBol = r.status === 'NEW' || r.status === 'DONE' || (r.status === 'TAKEN' && r.takenByUsername === user.username);
   const takeDisabled = r.status !== 'NEW';
   const doneDisabled = r.status !== 'TAKEN' || isTakenByOther;
   $('tabContent').innerHTML = `
@@ -341,7 +343,7 @@ function renderChatTab(r){
     <div class="line"><b>Done by:</b> ${esc(r.doneByName||'-')}</div>
     
     ${isTakenByOther ? `<div class="line" style="color:#facc15"><b>Locked:</b> ovaj request radi ${esc(r.takenByName || 'drugi operator')}. Možeš samo da pregledaš.</div>` : ''}
-    <div class="actions"><button class="btn blue ${takeDisabled?'disabled':''}" id="takeBtn" ${takeDisabled?'disabled':''}>Preuzmi</button><button class="btn green ${doneDisabled?'disabled':''}" id="doneBtn" ${doneDisabled?'disabled':''}>Završeno</button><button class="btn redbtn ${!canWork?'disabled':''}" id="bolReqBtn" ${!canWork?'disabled':''}>Require BOL next time</button></div>
+    <div class="actions"><button class="btn blue ${takeDisabled?'disabled':''}" id="takeBtn" ${takeDisabled?'disabled':''}>Preuzmi</button><button class="btn green ${doneDisabled?'disabled':''}" id="doneBtn" ${doneDisabled?'disabled':''}>Završeno</button><button class="btn redbtn ${!canRequestBol?'disabled':''}" id="bolReqBtn" ${!canRequestBol?'disabled':''}>Require BOL next time</button></div>
     <div class="chat" id="chatBox">${msgs.map((m,i)=>`<div class="msg ${i===msgs.length-1?'lastMsg':''}"><b>${esc(m.sender)}:</b> ${esc(m.text)} ${m.bolImage?`<button class="inlineImageIcon" data-img-index="${getImageIndex(r,m.bolImage)}" title="Open BOL image">🖼️</button>`:''} <span class="mini">(${formatDate(m.createdAt)})</span></div>`).join('')}</div>
     <div style="display:flex;gap:8px"><input class="input" id="chatInput" placeholder="Message" ${!canWork?'disabled':''}><button class="btn blue ${!canWork?'disabled':''}" id="sendMsgBtn" ${!canWork?'disabled':''}>Send</button></div>`;
   document.querySelectorAll('.inlineImageIcon').forEach(btn => {
@@ -349,7 +351,7 @@ function renderChatTab(r){
   });
   $('takeBtn').onclick=()=>takeRequest(r.id);
   $('doneBtn').onclick=()=>doneRequest(r.id);
-  $('bolReqBtn').onclick=()=>{ if(canWork) requireBol(r); };
+  $('bolReqBtn').onclick=()=>{ if(canRequestBol) requireBol(r); };
   $('sendMsgBtn').onclick=()=>{ if(canWork) sendMsg(r.id); };
   $('chatInput').onkeydown=e=>{if(e.key==='Enter' && canWork)sendMsg(r.id);};
   setTimeout(()=>{
