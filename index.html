@@ -226,8 +226,16 @@ function showAdmin(){
   renderAdmin();
 }
 
+function getCustomerTicket(){
+  return requests
+    .filter(r => r.customerUsername === user.username)
+    .sort((a,b) => getDate(b.createdAt) - getDate(a.createdAt))[0] || null;
+}
+
 function getActiveCustomerRequest(){
-  return requests.find(r => r.customerUsername === user.username && r.status !== 'DONE');
+  const ticket = getCustomerTicket();
+  if(ticket && ticket.status !== 'DONE') return ticket;
+  return null;
 }
 
 function refreshCustomer(){
@@ -285,11 +293,34 @@ function checkBolThen(fn){
 function readBol(e){
   const file = e.target.files[0];
   if(!file) return;
+
   const reader = new FileReader();
-  reader.onload = () => {
-    pendingBol = reader.result;
-    $('bolPreview').src = pendingBol;
-    $('bolPreview').style.display='block';
+  reader.onload = event => {
+    const img = new Image();
+    img.onload = () => {
+      const maxSize = 900;
+      let width = img.width;
+      let height = img.height;
+
+      if(width > height && width > maxSize){
+        height = Math.round(height * maxSize / width);
+        width = maxSize;
+      } else if(height > maxSize){
+        width = Math.round(width * maxSize / height);
+        height = maxSize;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      pendingBol = canvas.toDataURL('image/jpeg', 0.55);
+      $('bolPreview').src = pendingBol;
+      $('bolPreview').style.display='block';
+    };
+    img.src = event.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -333,15 +364,22 @@ function choice(text, cls, fn){
 }
 
 async function sendRequest(type, value){
-  const existing = getActiveCustomerRequest();
+  const existing = getCustomerTicket();
 
   if(existing){
     await updateDoc(doc(db,'requests',existing.id), {
-      type: existing.type,
-      value: existing.value,
+      type,
+      value,
+      status:'NEW',
+      createdAt: serverTimestamp(),
+      takenByName:null,
+      takenByUsername:null,
+      doneByName:null,
+      doneAt:null,
+      bolImage: pendingBol || existing.bolImage || null,
       messages: arrayUnion({
         sender: user.name || user.username,
-        text: type + ' ' + value + ' additional request',
+        text: type + ' ' + value + ' new request in same ticket',
         createdAt: Date.now(),
         bolImage: pendingBol || null
       })
@@ -354,7 +392,8 @@ async function sendRequest(type, value){
     }
 
     pendingBol = null;
-    alert('Request dodat u postojeći ticket.');
+    activeId = existing.id;
+    localStorage.setItem('activeRequestId', activeId);
     refreshCustomer();
     return;
   }
