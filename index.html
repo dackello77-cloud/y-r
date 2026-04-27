@@ -1,86 +1,355 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Communicator Demo</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Communicator - Customer Screen</title>
 <style>
-body{margin:0;font-family:Arial;background:#0f172a;color:white}
-.container{display:flex;height:100vh}
-.sidebar{width:300px;background:#020617;border-right:1px solid #1f2937;padding:15px}
-.main{flex:1;display:flex;flex-direction:column}
-.card{padding:15px;margin-bottom:10px;border-radius:10px;cursor:pointer}
-.red{background:#7f1d1d}
-.blue{background:#1e3a8a}
-.green{background:#064e3b}
-button{padding:10px;margin-top:10px;border:none;border-radius:8px;cursor:pointer}
-.top{padding:15px;border-bottom:1px solid #1f2937}
-.chat{flex:1;padding:15px;overflow:auto}
-.input{display:flex;padding:10px;border-top:1px solid #1f2937}
-input{flex:1;padding:10px;border-radius:8px;border:none}
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial, sans-serif;
+}
+body{
+  background:#0f172a;
+  color:#fff;
+  min-height:100vh;
+}
+.app{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+.header{
+  padding:18px 24px;
+  background:#020617;
+  border-bottom:1px solid #1f2937;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.header h1{
+  font-size:24px;
+  color:#e5e7eb;
+}
+.header span{
+  color:#94a3b8;
+  font-size:14px;
+}
+.home{
+  flex:1;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+}
+.big-option{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  cursor:pointer;
+  transition:0.2s;
+  text-align:center;
+}
+.big-option:hover{
+  filter:brightness(1.08);
+}
+.shift{
+  background:#facc15;
+  color:#1f2937;
+}
+.hours{
+  background:#dc2626;
+  color:white;
+}
+.big-option h2{
+  font-size:58px;
+  margin-bottom:12px;
+}
+.big-option p{
+  font-size:20px;
+  font-weight:bold;
+}
+.panel{
+  min-height:100vh;
+  display:none;
+  flex-direction:column;
+  padding:24px;
+}
+.panel-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:24px;
+}
+.panel-top h2{
+  font-size:32px;
+}
+.back-btn{
+  background:#334155;
+  color:white;
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+  flex:1;
+}
+.choice{
+  border:none;
+  border-radius:18px;
+  font-size:42px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s;
+}
+.choice:hover{
+  transform:scale(1.02);
+}
+.shift-choice{
+  background:#facc15;
+  color:#111827;
+}
+.hours-choice{
+  background:#dc2626;
+  color:white;
+}
+.waiting,
+.working{
+  min-height:100vh;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px;
+}
+.waiting{
+  background:#991b1b;
+}
+.working{
+  background:#1d4ed8;
+}
+.status-box h2{
+  font-size:48px;
+  margin-bottom:18px;
+}
+.status-box p{
+  font-size:22px;
+  margin-bottom:12px;
+}
+.timer{
+  font-size:64px;
+  font-weight:bold;
+  margin:24px 0;
+}
+.demo-admin{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#020617;
+  border:1px solid #334155;
+  padding:14px;
+  border-radius:14px;
+  display:none;
+  gap:10px;
+}
+.demo-admin button{
+  border:none;
+  padding:10px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+}
+.take{
+  background:#2563eb;
+  color:white;
+}
+.done{
+  background:#16a34a;
+  color:white;
+}
+@media(max-width:700px){
+  .home{
+    grid-template-columns:1fr;
+  }
+  .big-option h2{
+    font-size:44px;
+  }
+  .grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .choice{
+    font-size:30px;
+  }
+}
 </style>
 </head>
 <body>
-<div class="container">
-<div class="sidebar">
-<h3>Requests</h3>
-<div id="list"></div>
+<div class="app">
+  <div class="header" id="header">
+    <h1>Communicator</h1>
+    <span>Customer Screen</span>
+  </div>
+
+  <section class="home" id="home">
+    <div class="big-option shift" onclick="openShift()">
+      <h2>SHIFT</h2>
+      <p>Request shift time</p>
+    </div>
+    <div class="big-option hours" onclick="openHours()">
+      <h2>HOURS</h2>
+      <p>Request extra hours</p>
+    </div>
+  </section>
+
+  <section class="panel" id="shiftPanel">
+    <div class="panel-top">
+      <h2>Choose SHIFT time</h2>
+      <button class="back-btn" onclick="goHome()">Back</button>
+    </div>
+    <div class="grid" id="shiftGrid"></div>
+  </section>
+
+  <section class="panel" id="hoursPanel">
+    <div class="panel-top">
+      <h2>Choose HOURS</h2>
+      <button class="back-btn" onclick="goHome()">Back</button>
+    </div>
+    <div class="grid" id="hoursGrid"></div>
+  </section>
+
+  <section class="waiting" id="waiting">
+    <div class="status-box">
+      <h2>REQUEST SENT</h2>
+      <p id="requestText">Waiting for operator...</p>
+      <div class="timer" id="timer">00:00:00</div>
+      <p>Operator has not taken this request yet.</p>
+    </div>
+  </section>
+
+  <section class="working" id="working">
+    <div class="status-box">
+      <h2>OPERATOR IS WORKING</h2>
+      <p id="workingText">Your request has been taken.</p>
+      <div class="timer" id="timerBlue">00:00:00</div>
+      <p>Please wait until operator finishes.</p>
+    </div>
+  </section>
 </div>
-<div class="main">
-<div class="top">Communicator Demo</div>
-<div class="chat" id="chat"></div>
-<div class="input">
-<input id="msg" placeholder="Type message...">
-<button onclick="sendMsg()">Send</button>
-</div>
-</div>
+
+<div class="demo-admin" id="demoAdmin">
+  <button class="take" onclick="takeRequest()">Demo: Take</button>
+  <button class="done" onclick="finishRequest()">Demo: Done</button>
 </div>
 
 <script>
-let requests = [];
+let currentRequest = null;
+let startTime = null;
+let timerInterval = null;
 
-function createRequest(type,value){
-let r={id:Date.now(),type,value,status:'NEW',messages:[]};
-requests.unshift(r);
-render();
+function hideAll(){
+  document.getElementById('home').style.display='none';
+  document.getElementById('shiftPanel').style.display='none';
+  document.getElementById('hoursPanel').style.display='none';
+  document.getElementById('waiting').style.display='none';
+  document.getElementById('working').style.display='none';
 }
 
-function take(id){
-requests.forEach(r=>{if(r.id===id && r.status==='NEW'){r.status='TAKEN'}});
-render();
+function goHome(){
+  hideAll();
+  document.getElementById('home').style.display='grid';
+  document.getElementById('demoAdmin').style.display='none';
+  currentRequest=null;
+  clearInterval(timerInterval);
 }
 
-function done(id){
-requests.forEach(r=>{if(r.id===id){r.status='DONE'}});
-render();
+function openShift(){
+  hideAll();
+  buildShiftTimes();
+  document.getElementById('shiftPanel').style.display='flex';
 }
 
-function render(){
-let list=document.getElementById('list');
-list.innerHTML='';
-requests.forEach(r=>{
-let div=document.createElement('div');
-div.className='card '+(r.status==='NEW'?'red':r.status==='TAKEN'?'blue':'green');
-div.innerHTML=`${r.type} ${r.value}<br>Status: ${r.status}
-<br><button onclick="take(${r.id})">Take</button>
-<button onclick="done(${r.id})">Done</button>`;
-list.appendChild(div);
-});
+function openHours(){
+  hideAll();
+  buildHours();
+  document.getElementById('hoursPanel').style.display='flex';
 }
 
-function sendMsg(){
-let text=document.getElementById('msg').value;
-if(!text)return;
-let chat=document.getElementById('chat');
-let p=document.createElement('p');
-p.innerText=text;
-chat.appendChild(p);
-document.getElementById('msg').value='';
+function buildShiftTimes(){
+  const grid=document.getElementById('shiftGrid');
+  grid.innerHTML='';
+  const now=new Date();
+  now.setMinutes(0,0,0);
+  now.setHours(now.getHours()+1);
+
+  for(let i=0;i<10;i++){
+    const d=new Date(now.getTime()+i*60*60*1000);
+    let hour=d.getHours();
+    const ampm=hour>=12?'PM':'AM';
+    hour=hour%12;
+    if(hour===0) hour=12;
+    const label=hour+ampm;
+
+    const btn=document.createElement('button');
+    btn.className='choice shift-choice';
+    btn.innerText=label;
+    btn.onclick=()=>sendRequest('SHIFT',label);
+    grid.appendChild(btn);
+  }
 }
 
-// demo buttons
-setTimeout(()=>createRequest('SHIFT','10AM'),1000);
-setTimeout(()=>createRequest('HOURS','3+'),2000);
+function buildHours(){
+  const grid=document.getElementById('hoursGrid');
+  grid.innerHTML='';
+  for(let i=1;i<=8;i++){
+    const label=i+'+';
+    const btn=document.createElement('button');
+    btn.className='choice hours-choice';
+    btn.innerText=label;
+    btn.onclick=()=>sendRequest('HOURS',label);
+    grid.appendChild(btn);
+  }
+}
+
+function sendRequest(type,value){
+  currentRequest={type,value,status:'NEW'};
+  startTime=new Date();
+  hideAll();
+  document.getElementById('requestText').innerText=type+' request: '+value;
+  document.getElementById('waiting').style.display='flex';
+  document.getElementById('demoAdmin').style.display='flex';
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    const diff=Math.floor((new Date()-startTime)/1000);
+    const h=String(Math.floor(diff/3600)).padStart(2,'0');
+    const m=String(Math.floor((diff%3600)/60)).padStart(2,'0');
+    const s=String(diff%60).padStart(2,'0');
+    document.getElementById('timer').innerText=h+':'+m+':'+s;
+    document.getElementById('timerBlue').innerText=h+':'+m+':'+s;
+  },1000);
+}
+
+function takeRequest(){
+  if(!currentRequest)return;
+  currentRequest.status='TAKEN';
+  hideAll();
+  document.getElementById('workingText').innerText=currentRequest.type+' '+currentRequest.value+' is taken by operator.';
+  document.getElementById('working').style.display='flex';
+}
+
+function finishRequest(){
+  goHome();
+}
+
+goHome();
 </script>
 </body>
 </html>
