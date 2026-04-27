@@ -217,14 +217,14 @@ function readBol(e){
   reader.onload = event => {
     const img = new Image();
     img.onload = () => {
-      const maxSize = 1600;
+      const maxSize = 1100;
       let width = img.width, height = img.height;
       if(width > height && width > maxSize){ height = Math.round(height * maxSize / width); width = maxSize; }
       else if(height > maxSize){ width = Math.round(width * maxSize / height); height = maxSize; }
       const canvas = document.createElement('canvas');
       canvas.width = width; canvas.height = height;
       canvas.getContext('2d').drawImage(img,0,0,width,height);
-      pendingBol = canvas.toDataURL('image/jpeg',0.92);
+      pendingBol = canvas.toDataURL('image/jpeg',0.72);
       $('bolPreview').src = pendingBol;
       $('bolPreview').style.display='block';
     };
@@ -326,8 +326,10 @@ function renderDetails(){
 
 function renderChatTab(r){
   const msgs = Array.isArray(r.messages) ? r.messages : [];
+  const isTakenByOther = r.status === 'TAKEN' && r.takenByUsername && r.takenByUsername !== user.username;
+  const canWork = r.status === 'NEW' || (r.status === 'TAKEN' && r.takenByUsername === user.username);
   const takeDisabled = r.status !== 'NEW';
-  const doneDisabled = r.status === 'DONE';
+  const doneDisabled = r.status !== 'TAKEN' || isTakenByOther;
   $('tabContent').innerHTML = `
     <h2>${esc(r.type)} ${esc(r.value)}</h2>
     <div class="line"><b>Customer:</b> ${esc(r.customerName)}</div>
@@ -338,17 +340,18 @@ function renderChatTab(r){
     <div class="line"><b>Operator:</b> ${esc(r.takenByName||'-')}</div>
     <div class="line"><b>Done by:</b> ${esc(r.doneByName||'-')}</div>
     
-    <div class="actions"><button class="btn blue ${takeDisabled?'disabled':''}" id="takeBtn" ${takeDisabled?'disabled':''}>Preuzmi</button><button class="btn green ${doneDisabled?'disabled':''}" id="doneBtn" ${doneDisabled?'disabled':''}>Završeno</button><button class="btn redbtn" id="bolReqBtn">Require BOL next time</button></div>
+    ${isTakenByOther ? `<div class="line" style="color:#facc15"><b>Locked:</b> ovaj request radi ${esc(r.takenByName || 'drugi operator')}. Možeš samo da pregledaš.</div>` : ''}
+    <div class="actions"><button class="btn blue ${takeDisabled?'disabled':''}" id="takeBtn" ${takeDisabled?'disabled':''}>Preuzmi</button><button class="btn green ${doneDisabled?'disabled':''}" id="doneBtn" ${doneDisabled?'disabled':''}>Završeno</button><button class="btn redbtn ${!canWork?'disabled':''}" id="bolReqBtn" ${!canWork?'disabled':''}>Require BOL next time</button></div>
     <div class="chat" id="chatBox">${msgs.map((m,i)=>`<div class="msg ${i===msgs.length-1?'lastMsg':''}"><b>${esc(m.sender)}:</b> ${esc(m.text)} ${m.bolImage?`<button class="inlineImageIcon" data-img-index="${getImageIndex(r,m.bolImage)}" title="Open BOL image">🖼️</button>`:''} <span class="mini">(${formatDate(m.createdAt)})</span></div>`).join('')}</div>
-    <div style="display:flex;gap:8px"><input class="input" id="chatInput" placeholder="Message"><button class="btn blue" id="sendMsgBtn">Send</button></div>`;
+    <div style="display:flex;gap:8px"><input class="input" id="chatInput" placeholder="Message" ${!canWork?'disabled':''}><button class="btn blue ${!canWork?'disabled':''}" id="sendMsgBtn" ${!canWork?'disabled':''}>Send</button></div>`;
   document.querySelectorAll('.inlineImageIcon').forEach(btn => {
     btn.onclick = () => openImagePreviewByIndex(Number(btn.dataset.imgIndex || 0));
   });
   $('takeBtn').onclick=()=>takeRequest(r.id);
   $('doneBtn').onclick=()=>doneRequest(r.id);
-  $('bolReqBtn').onclick=()=>requireBol(r);
-  $('sendMsgBtn').onclick=()=>sendMsg(r.id);
-  $('chatInput').onkeydown=e=>{if(e.key==='Enter')sendMsg(r.id);};
+  $('bolReqBtn').onclick=()=>{ if(canWork) requireBol(r); };
+  $('sendMsgBtn').onclick=()=>{ if(canWork) sendMsg(r.id); };
+  $('chatInput').onkeydown=e=>{if(e.key==='Enter' && canWork)sendMsg(r.id);};
   setTimeout(()=>{
     const chatBox = $('chatBox');
     if(chatBox) chatBox.scrollTop = chatBox.scrollHeight;
@@ -446,9 +449,37 @@ async function takeRequest(id){
     transaction.update(ref,{status:'TAKEN',takenByName:user.name||user.username,takenByUsername:user.username,takenAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Taken by '+(user.name||user.username),createdAt:Date.now()})});
   });
 }
-async function doneRequest(id){ await updateDoc(doc(db,'requests',id),{status:'DONE',doneByName:user.name||user.username,doneAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Finished by '+(user.name||user.username),createdAt:Date.now()})}); }
-async function requireBol(r){ if(!r.customerUsername){alert('No customer username.');return;} await updateDoc(doc(db,'users',r.customerUsername),{bolRequired:true}); await updateDoc(doc(db,'requests',r.id),{messages:arrayUnion({sender:'System',text:'BOL required enabled for next request.',createdAt:Date.now()})}); alert('BOL uključen za: '+r.customerName); }
-async function sendMsg(id){ const input=$('chatInput'); const text=input.value.trim(); if(!text)return; await updateDoc(doc(db,'requests',id),{messages:arrayUnion({sender:user.name||user.username,text,createdAt:Date.now()})}); input.value=''; }
+async function doneRequest(id){
+  const r = requests.find(x => x.id === id);
+  if(!r) return;
+  if(r.status !== 'TAKEN' || r.takenByUsername !== user.username){
+    alert('Samo operator koji je preuzeo request može da klikne Završeno.');
+    return;
+  }
+  await updateDoc(doc(db,'requests',id),{status:'DONE',doneByName:user.name||user.username,doneAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Finished by '+(user.name||user.username),createdAt:Date.now()})});
+}
+async function requireBol(r){
+  if(r.status === 'TAKEN' && r.takenByUsername !== user.username){
+    alert('Samo operator koji je preuzeo request može da traži BOL.');
+    return;
+  }
+  if(!r.customerUsername){alert('No customer username.');return;}
+  await updateDoc(doc(db,'users',r.customerUsername),{bolRequired:true});
+  await updateDoc(doc(db,'requests',r.id),{messages:arrayUnion({sender:'System',text:'BOL required enabled for next request.',createdAt:Date.now()})});
+  alert('BOL uključen za: '+r.customerName);
+}
+async function sendMsg(id){
+  const r = requests.find(x => x.id === id);
+  if(r && r.status === 'TAKEN' && r.takenByUsername !== user.username){
+    alert('Samo operator koji je preuzeo request može da šalje poruke.');
+    return;
+  }
+  const input=$('chatInput');
+  const text=input.value.trim();
+  if(!text)return;
+  await updateDoc(doc(db,'requests',id),{messages:arrayUnion({sender:user.name||user.username,text,createdAt:Date.now()})});
+  input.value='';
+}
 async function addUser(){ const username=$('newUsername').value.trim(), name=$('newName').value.trim(), password=$('newPassword').value.trim(), role=$('newRole').value, status=$('addUserStatus'); if(!username||!name){status.className='error';status.innerText='Popuni username i name.';return;} const data={username,name,role,active:true}; if(role!=='customer')data.password=password||'1234'; if(role==='customer')data.bolRequired=false; if(role==='admin')data.assignedCustomers=[]; await setDoc(doc(db,'users',username),data); status.className='success'; status.innerText='User dodat: '+username; $('newUsername').value=''; $('newName').value=''; $('newPassword').value=''; }
 window.deleteUserByUsername = async username => { if(!confirm('Da li sigurno brišeš usera: '+username+'?'))return; await deleteDoc(doc(db,'users',username)); alert('User obrisan: '+username); };
 function loadAdminAssignments(){ const admin=allUsers.find(u=>u.username===$('assignAdmin').value); const assigned=Array.isArray(admin?.assignedCustomers)?admin.assignedCustomers:[]; document.querySelectorAll('.customerCheck').forEach(ch=>ch.checked=assigned.includes(ch.value)); }
