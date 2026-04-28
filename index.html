@@ -10,9 +10,9 @@
 <body>
 <div class="header"><div><h1>Communicator</h1><span id="userInfo">Not logged in</span></div><button class="btn gray" id="logoutBtn" style="display:none">Logout</button></div>
 <div class="login" id="loginScreen"><div class="loginBox"><h2>Login</h2><input id="loginUsername" placeholder="Username"><input id="loginPassword" placeholder="Password / customer leave empty" type="password"><button class="btn blue" style="width:100%" id="loginBtn">Login</button><p id="loginError" class="error"></p></div></div>
-<section class="home" id="home"><div class="big shift" id="shiftBtn"><h2>SHIFT</h2><p>Request shift time</p></div><div class="big hours" id="hoursBtn"><h2>HOURS</h2><p>Request extra hours</p></div></section>
-<section class="panel" id="shiftPanel"><div class="panelTop"><h2>Choose SHIFT time</h2><button class="btn gray" id="backShift">Back</button></div><div class="grid" id="shiftGrid"></div></section>
-<section class="panel" id="hoursPanel"><div class="panelTop"><h2>Choose HOURS</h2><button class="btn gray" id="backHours">Back</button></div><div class="grid" id="hoursGrid"></div></section>
+<section class="home" id="home"><div class="big shift" id="shiftBtn"><h2></h2><p></p></div><div class="big hours" id="hoursBtn"><h2></h2><p></p></div></section>
+<section class="panel" id="shiftPanel"><div class="panelTop"><h2></h2><button class="btn gray" id="backShift">Back</button></div><div class="grid" id="shiftGrid"></div></section>
+<section class="panel" id="hoursPanel"><div class="panelTop"><h2></h2><button class="btn gray" id="backHours">Back</button></div><div class="grid" id="hoursGrid"></div></section>
 <section class="panel" id="bolPanel"><div class="panelTop"><h2>BOL required</h2><button class="btn gray" id="backBol">Back</button></div><p class="line">Please take/upload a BOL photo before sending request.</p><input class="input" id="bolFile" type="file" accept="image/*" capture="environment"><img id="bolPreview" class="preview" style="display:none"><button class="btn blue" id="continueAfterBol">Continue</button></section>
 <section class="waiting" id="waiting"><div class="status"><h2>REQUEST SENT</h2><p id="requestText"></p><div class="timer" id="timer">00:00:00</div><p>Waiting for operator...</p></div></section>
 <section class="working" id="working"><div class="status"><h2>OPERATOR IS WORKING</h2><p id="workingText"></p><div class="timer" id="timerBlue">00:00:00</div><p>Please wait until operator finishes.</p></div></section>
