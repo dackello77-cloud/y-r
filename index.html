@@ -42,7 +42,7 @@ async function sendRequest(type,value){try{const existing=getCustomerTicket();if
 function renderAdmin(){const list=$('requestList');let visible=requests;if(user.role==='admin')visible=requests.filter(r=>getAssignedCustomers(userKey(user)).includes(r.customerUsername));const search=($('requestSearch')?.value||'').toLowerCase().trim();if(search)visible=visible.filter(r=>(r.customerName||'').toLowerCase().includes(search)||(r.customerUsername||'').toLowerCase().includes(search));$('count').innerText=visible.length;list.innerHTML='';const rank={NEW:1,TAKEN:2,DONE:3},sorted=[...visible].sort((a,b)=>((rank[a.status]||9)-(rank[b.status]||9))||(getDate(b.createdAt)-getDate(a.createdAt)));if(!selectedId&&sorted[0])selectedId=sorted[0].id;if(selectedId&&!sorted.find(r=>r.id===selectedId))selectedId=sorted[0]?.id||null;if(!sorted.length)list.innerHTML='<div class="line">No requests yet.</div>';sorted.forEach(r=>{const div=document.createElement('div');div.className='card '+(r.status==='NEW'?'new':r.status==='TAKEN'?'taken':'done')+(r.id===selectedId?' sel':'');div.innerHTML=`<b>${esc(r.customerName)}</b><br>${esc(r.type)} ${esc(r.value)}<br>Status: ${esc(r.status)}<br>Taken by: ${esc(r.takenByName||'-')}`;div.onclick=()=>{selectedId=r.id;renderAdmin()};list.appendChild(div)});renderDetails()}
 function renderDetails(){const r=requests.find(x=>x.id===selectedId);if(!r){$('details').innerHTML='Select request.';return}const isSuper=user.role==='super_admin';$('details').innerHTML=`<div class="tabs"><button class="btn blue" id="tabChat">Chat</button>${isSuper?'<button class="btn gray" id="tabUsers">Add / Manage Users</button>':''}</div><div id="tabContent"></div>`;$('tabChat').onclick=()=>renderChatTab(r);if(isSuper)$('tabUsers').onclick=renderUserTab;renderChatTab(r)}
 function renderChatTab(r){const msgs=Array.isArray(r.messages)?r.messages:[];const isSuper=user.role==='super_admin';const isTakenByOther=r.status==='TAKEN'&&r.takenByUsername&&r.takenByUsername!==user.username;const canWork=isSuper&&(r.status==='NEW'||(r.status==='TAKEN'&&r.takenByUsername===user.username));const canRequestBol=true;const takeDisabled=!isSuper||r.status!=='NEW';const doneDisabled=!isSuper||r.status!=='TAKEN'||isTakenByOther;$('tabContent').innerHTML=`<h2>${esc(r.type)} ${esc(r.value)}</h2><div class="line"><b>Customer:</b> ${esc(r.customerName)}</div><div class="line"><b>Status:</b> ${esc(r.status)}</div><div class="line"><b>Created:</b> ${formatDate(r.createdAt)}</div><div class="line"><b>Taken at:</b> ${formatDate(r.takenAt)}</div><div class="line"><b>Done at:</b> ${formatDate(r.doneAt)}</div><div class="line"><b>Operator:</b> ${esc(r.takenByName||'-')}</div><div class="line"><b>Done by:</b> ${esc(r.doneByName||'-')}</div>${isTakenByOther?`<div class="line" style="color:#facc15"><b>Locked:</b> ovaj request radi ${esc(r.takenByName||'drugi operator')}. Možeš samo da pregledaš.</div>`:''}<div class="actions"><button class="btn blue ${takeDisabled?'disabled':''}" id="takeBtn" ${takeDisabled?'disabled':''}>Preuzmi</button><button class="btn green ${doneDisabled?'disabled':''}" id="doneBtn" ${doneDisabled?'disabled':''}>Završeno</button><button class="btn redbtn" id="bolReqBtn">Require BOL next time</button></div><div class="chat" id="chatBox">${msgs.map((m,i)=>`<div class="msg ${i===msgs.length-1?'lastMsg':''}"><b>${esc(m.sender)}:</b> ${esc(m.text)} ${m.bolImage?`<button class="inlineImageIcon" data-img-index="${getImageIndex(r,m.bolImage)}">🖼️</button>`:''}<span class="mini">(${formatDate(m.createdAt)})</span></div>`).join('')}</div><div style="display:flex;gap:8px"><input class="input" id="chatInput" placeholder="Message" ${!canWork?'disabled':''}><button class="btn blue ${!canWork?'disabled':''}" id="sendMsgBtn" ${!canWork?'disabled':''}>Send</button></div>`;document.querySelectorAll('.inlineImageIcon').forEach(btn=>btn.onclick=()=>openImagePreviewByIndex(Number(btn.dataset.imgIndex||0)));$('takeBtn').onclick=()=>takeRequest(r.id);$('doneBtn').onclick=()=>doneRequest(r.id);$('bolReqBtn').onclick=()=>requireBol(r);$('sendMsgBtn').onclick=()=>{if(canWork)sendMsg(r.id)};$('chatInput').onkeydown=e=>{if(e.key==='Enter'&&canWork)sendMsg(r.id)};setTimeout(()=>{const c=$('chatBox');if(c)c.scrollTop=c.scrollHeight},50)}
-function userKey(u){return u?.username || u?.id || ''}
+function userKey(u){return u?.id || u?.username || ''}
 function userLabel(u){return u?.name || u?.username || u?.id || ''}
 
 function renderUserTab(){
@@ -103,15 +103,54 @@ function renderManageUsers(){
 window.editUserByUsername=async function(username){
   const u=allUsers.find(x=>userKey(x)===username);
   if(!u)return alert('User nije pronađen.');
-  const newName=prompt('Name / Company:', userLabel(u));
-  if(newName===null)return;
-  const updates={name:newName,username:username};
-  if(u.role!=='customer'){
-    const newPass=prompt('Password:', u.password||'1234');
-    if(newPass!==null)updates.password=newPass;
+
+  const editable={
+    username:userKey(u),
+    name:u.name||'',
+    role:u.role||'customer',
+    password:u.password||'',
+    active:u.active!==false,
+    bolRequired:!!u.bolRequired,
+    assignedCustomers:Array.isArray(u.assignedCustomers)?u.assignedCustomers:[]
+  };
+
+  const result=prompt('Edit user data (JSON):', JSON.stringify(editable,null,2));
+  if(result===null)return;
+
+  let parsed;
+  try{
+    parsed=JSON.parse(result);
+  }catch(e){
+    alert('JSON nije ispravan. Izmena nije sačuvana.');
+    return;
   }
-  await updateDoc(doc(db,'users',username),updates);
-  alert('User izmenjen: '+username);
+
+  const oldKey=userKey(u);
+  const newKey=(parsed.username||oldKey).trim();
+  if(!newKey){alert('Username ne može biti prazan.');return;}
+
+  const clean={
+    username:newKey,
+    name:parsed.name||newKey,
+    role:parsed.role||u.role||'customer',
+    active:parsed.active!==false
+  };
+  if(clean.role!=='customer') clean.password=parsed.password||'1234';
+  if(clean.role==='customer') clean.bolRequired=!!parsed.bolRequired;
+  if(clean.role==='admin') clean.assignedCustomers=Array.isArray(parsed.assignedCustomers)?parsed.assignedCustomers:[];
+
+  if(newKey!==oldKey){
+    await setDoc(doc(db,'users',newKey),clean);
+    await deleteDoc(doc(db,'users',oldKey));
+    if(assignments[oldKey]){
+      await setDoc(doc(db,'assignments',newKey),{adminUsername:newKey,customers:assignments[oldKey],updatedAt:serverTimestamp()});
+      await deleteDoc(doc(db,'assignments',oldKey));
+    }
+  }else{
+    await updateDoc(doc(db,'users',oldKey),clean);
+  }
+
+  alert('User izmenjen: '+newKey);
 }
 
 function renderAdminAssignList(){
