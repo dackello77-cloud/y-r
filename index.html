@@ -32,23 +32,19 @@ $('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=
 async function ensureTestCompany(){const c=await getDoc(doc(db,'companies','test_company'));if(!c.exists())await setDoc(doc(db,'companies','test_company'),{companyId:'test_company',name:'Test Company',superAdminUsername:'super',superAdminName:'Dalibor',createdAt:serverTimestamp()});}
 ensureTestCompany();
 function isLast10Days(r){
-  const d=getDate(r.createdAt);
-  const limit=new Date();
-  limit.setDate(limit.getDate()-10);
-  return d>=limit;
-}
-
-async function deleteOldRequests(){
   try{
-    for(const r of requests){
-      if(!isLast10Days(r)) await deleteDoc(doc(db,'requests',r.id));
-    }
-  }catch(e){console.log('old request cleanup error',e)}
+    const d=getDate(r.createdAt);
+    const limit=new Date();
+    limit.setDate(limit.getDate()-10);
+    return d>=limit;
+  }catch(e){
+    return true;
+  }
 }
 
 onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{
-  requests=snap.docs.map(d=>({id:d.id,...d.data()})).filter(isLast10Days);
-  deleteOldRequests();
+  const allReq=snap.docs.map(d=>({id:d.id,...d.data()}));
+  requests=allReq.filter(isLast10Days);
   if(user?.role==='customer')refreshCustomer();
   if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin')renderAdmin();
 },err=>alert('Firestore requests error: '+err.message));
