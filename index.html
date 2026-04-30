@@ -76,7 +76,6 @@ function checkBolThen(fn){if(user?.bolRequired){nextPanel=fn;hideAll();$('bolPan
     img.onload=()=>{
       const maxSize=1600;
       let width=img.width,height=img.height;
-
       if(width>height&&width>maxSize){height=Math.round(height*maxSize/width);width=maxSize}
       else if(height>maxSize){width=Math.round(width*maxSize/height);height=maxSize}
 
@@ -94,6 +93,19 @@ function checkBolThen(fn){if(user?.bolRequired){nextPanel=fn;hideAll();$('bolPan
         $('bolPreview').src=pendingBol;
         $('bolPreview').style.display='block';
       },'image/jpeg',0.88);
+
+      const smallMax=650;
+      let sw=img.width,sh=img.height;
+      if(sw>sh&&sw>smallMax){sh=Math.round(sh*smallMax/sw);sw=smallMax}
+      else if(sh>smallMax){sw=Math.round(sw*smallMax/sh);sh=smallMax}
+      const smallCanvas=document.createElement('canvas');
+      smallCanvas.width=sw;
+      smallCanvas.height=sh;
+      const sctx=smallCanvas.getContext('2d');
+      sctx.imageSmoothingEnabled=true;
+      sctx.imageSmoothingQuality='high';
+      sctx.drawImage(img,0,0,sw,sh);
+      pendingBolFallback=smallCanvas.toDataURL('image/jpeg',0.32);
     };
     img.src=event.target.result;
   };
@@ -116,7 +128,9 @@ async function uploadBolToStorage(type,value){
     await uploadBytes(fileRef,pendingBolBlob,{contentType:'image/jpeg'});
     return await getDownloadURL(fileRef);
   }catch(err){
-    alert('BOL slika nije poslata u Storage. Proveri Firebase Storage rules. Greška: '+err.message);
+    console.log('Storage upload failed, using fallback:',err);
+    if(pendingBolFallback)return pendingBolFallback;
+    alert('BOL slika nije poslata. Greška: '+err.message);
     throw err;
   }
 }
@@ -208,4 +222,205 @@ async function addUser(){
   if(role==='admin')data.assignedCustomers=[];
 
   await setDoc(doc(db,'users',username),data);
-  status.classN
+  status.className='success';
+  status.innerText='User dodat: '+username;
+  $('newUsername').value='';
+  $('newName').value='';
+  $('newPassword').value='';
+}
+
+window.deleteUserByUsername=async username=>{
+  const u=allUsers.find(x=>userKey(x)===username);
+  if(u?.role==='super_admin'){
+    alert('Super Admin ne može da se obriše.');
+    return;
+  }
+  if(!confirm('Da li sigurno brišeš usera: '+username+'?'))return;
+  await deleteDoc(doc(db,'users',username));
+  alert('User obrisan: '+username);
+};
+
+window.editUserByUsername=function(username){
+  const u=allUsers.find(x=>userKey(x)===username);
+  if(!u)return;
+  editMode='user';
+  editTarget=u;
+  $('editTitle').innerText='Edit user';
+  $('editName').value=u.name||'';
+  $('editUsername').value=userKey(u);
+  $('editPassword').value=u.password||'';
+  $('editRole').style.display='block';
+  $('editRole').value=u.role||'customer';
+  $('editStatus').innerText='';
+  $('editModal').style.display='flex';
+};
+
+function closeEditModal(){
+  $('editModal').style.display='none';
+  editMode=null;
+  editTarget=null;
+  $('editRole').style.display='block';
+}
+
+async function saveEditModal(){
+  const name=$('editName').value.trim();
+  const username=$('editUsername').value.trim();
+  const password=$('editPassword').value.trim();
+  const role=$('editRole').value;
+
+  if(!name||!username){
+    $('editStatus').className='error';
+    $('editStatus').innerText='Name i username su obavezni.';
+    return;
+  }
+
+  if(editMode==='user'){
+    const oldKey=userKey(editTarget);
+    if(username!==oldKey&&await usernameExists(username)){
+      $('editStatus').className='error';
+      $('editStatus').innerText='Username je zauzet: '+username;
+      return;
+    }
+    const data={username,name,role,active:true,companyId:companyOf(editTarget)};
+    if(role!=='customer')data.password=password||'1234';
+    if(role==='customer')data.bolRequired=!!editTarget.bolRequired;
+    if(role==='admin')data.assignedCustomers=Array.isArray(editTarget.assignedCustomers)?editTarget.assignedCustomers:[];
+    if(username!==oldKey){
+      await setDoc(doc(db,'users',username),data);
+      await deleteDoc(doc(db,'users',oldKey));
+    }else{
+      await updateDoc(doc(db,'users',oldKey),data);
+    }
+    closeEditModal();
+  }
+
+  if(editMode==='company'){
+    const c=editTarget;
+    const oldSuper=c.superAdminUsername;
+    const newSuper=username;
+    if(newSuper!==oldSuper&&await usernameExists(newSuper)){
+      $('editStatus').className='error';
+      $('editStatus').innerText='Username je zauzet: '+newSuper;
+      return;
+    }
+    await updateDoc(doc(db,'companies',c.id),{name,superAdminUsername:newSuper,superAdminName:name});
+    if(oldSuper&&oldSuper!==newSuper)await deleteDoc(doc(db,'users',oldSuper));
+    await setDoc(doc(db,'users',newSuper),{username:newSuper,name,password:password||'1234',role:'super_admin',companyId:c.id,active:true});
+    closeEditModal();
+  }
+}
+
+function getRequestImages(r){
+  const imgs=[];
+  if(r.bolImage)imgs.push(r.bolImage);
+  (Array.isArray(r.messages)?r.messages:[]).forEach(m=>{
+    if(m.bolImage&&!imgs.includes(m.bolImage))imgs.push(m.bolImage);
+  });
+  return imgs;
+}
+
+function getImageIndex(r,src){
+  previewImages=getRequestImages(r);
+  const i=previewImages.indexOf(src);
+  return i>=0?i:0;
+}
+
+function openImagePreviewByIndex(index){
+  const r=requests.find(x=>x.id===selectedId);
+  previewImages=r?getRequestImages(r):[];
+  if(!previewImages.length)return;
+  previewIndex=Math.max(0,Math.min(index,previewImages.length-1));
+  openImagePreview(previewImages[previewIndex]);
+}
+
+function openImagePreview(src){
+  currentPreviewImage=src;
+  currentZoom=1;
+  $('modalImage').src=src;
+  $('modalImage').style.width='85vw';
+  $('imageModal').style.display='flex';
+  setTimeout(()=>{
+    const area=document.querySelector('.imageArea');
+    if(area){area.scrollTop=0;area.scrollLeft=0;}
+  },50);
+  updateImageCounter();
+}
+
+function closeImagePreview(){
+  $('imageModal').style.display='none';
+  $('modalImage').src='';
+}
+
+function zoomInImage(){
+  currentZoom=Math.min(currentZoom+0.15,2.4);
+  $('modalImage').style.width=(85*currentZoom)+'vw';
+}
+
+function zoomOutImage(){
+  currentZoom=Math.max(currentZoom-0.15,0.5);
+  $('modalImage').style.width=(85*currentZoom)+'vw';
+}
+
+function downloadPreviewImage(){
+  if(!currentPreviewImage)return;
+  const a=document.createElement('a');
+  a.href=currentPreviewImage;
+  a.download='bol-image-'+(previewIndex+1)+'.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function showPrevImage(){
+  if(!previewImages.length)return;
+  previewIndex=(previewIndex-1+previewImages.length)%previewImages.length;
+  openImagePreview(previewImages[previewIndex]);
+}
+
+function showNextImage(){
+  if(!previewImages.length)return;
+  previewIndex=(previewIndex+1)%previewImages.length;
+  openImagePreview(previewImages[previewIndex]);
+}
+
+function updateImageCounter(){
+  $('imageCounter').innerText=previewImages.length?(previewIndex+1)+' / '+previewImages.length:'';
+}
+
+async function usernameExists(username){
+  const snap=await getDoc(doc(db,'users',username));
+  return snap.exists();
+}
+
+function getAssignedCustomers(adminUsername,companyId){
+  const id=companyId+'_'+adminUsername;
+  if(Array.isArray(assignments[id]))return assignments[id];
+  const admin=allUsers.find(u=>userKey(u)===adminUsername&&companyOf(u)===companyId);
+  return Array.isArray(admin?.assignedCustomers)?admin.assignedCustomers:[];
+}
+
+function slug(s){
+  return String(s||'company').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'company';
+}
+
+function getDate(v){
+  if(v?.toDate)return v.toDate();
+  if(typeof v==='number')return new Date(v);
+  return new Date(v||Date.now());
+}
+
+function formatDate(v){
+  if(!v)return'-';
+  return getDate(v).toLocaleString([],{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function esc(t){
+  return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function escAttr(t){
+  return esc(t);
+}
+</script>
+</body>
+</html>
