@@ -25,29 +25,29 @@ import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTim
 const firebaseConfig={apiKey:"AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",authDomain:"bamboo-bulwark-459920-p2.firebaseapp.com",projectId:"bamboo-bulwark-459920-p2",storageBucket:"bamboo-bulwark-459920-p2.firebasestorage.app",messagingSenderId:"740396048112",appId:"1:740396048112:web:72874b77b37bff2f3e2c35"};
 const app=initializeApp(firebaseConfig),db=getFirestore(app),$=id=>document.getElementById(id);
 let user=null,requests=[],allUsers=[],companies=[],assignments={},selectedId=null,activeId=localStorage.getItem('activeRequestId'),timerInt=null,startTime=null,pendingBol=null,nextPanel=null,previewImages=[],previewIndex=0,currentZoom=1,currentPreviewImage=null,selectedAssignAdmin=null,editMode=null,editTarget=null;
-let audioCtx=null;
-let soundUnlocked=false;
-let initialRequestsLoaded=false;
+window.audioCtx=null;
+window.soundUnlocked=false;
+window.initialRequestsLoaded=false;
 $('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('backShift').onclick=showHome;$('backHours').onclick=showHome;$('backBol').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return}if(nextPanel)nextPanel()};$('bolFile').onchange=readBol;$('loginPassword').onkeydown=e=>{if(e.key==='Enter')login()};$('loginUsername').onkeydown=e=>{if(e.key==='Enter')login()};$('closeModalBtn').onclick=closeImagePreview;$('zoomInBtn').onclick=zoomInImage;$('zoomOutBtn').onclick=zoomOutImage;$('downloadImgBtn').onclick=downloadPreviewImage;$('prevImageBtn').onclick=showPrevImage;$('nextImageBtn').onclick=showNextImage;$('requestSearch').oninput=renderAdmin;$('editCancel').onclick=closeEditModal;$('editSave').onclick=saveEditModal;
 async function ensureTestCompany(){const c=await getDoc(doc(db,'companies','test_company'));if(!c.exists())await setDoc(doc(db,'companies','test_company'),{companyId:'test_company',name:'Test Company',superAdminUsername:'super',superAdminName:'Dalibor',createdAt:serverTimestamp()});}
 ensureTestCompany();
-let lastRequestIds = new Set();
+window.lastRequestIds = window.lastRequestIds || new Set();
 
 onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{
   const newRequests = snap.docs.map(d=>({id:d.id,...d.data()}));
 
-  if(initialRequestsLoaded && (user?.role==='admin' || user?.role==='super_admin')){
+  if(window.initialRequestsLoaded && (user?.role==='admin' || user?.role==='super_admin')){
     newRequests.forEach(r=>{
       const isMyCompany = companyOf(r) === companyOf(user);
       const adminCanSee = user.role==='super_admin' || getAssignedCustomers(userKey(user),companyOf(user)).includes(r.customerUsername);
-      if(r.status==='NEW' && isMyCompany && adminCanSee && !lastRequestIds.has(r.id)){
+      if(r.status==='NEW' && isMyCompany && adminCanSee && !window.lastRequestIds.has(r.id)){
         playNotificationSound();
       }
     });
   }
 
-  lastRequestIds = new Set(newRequests.map(r=>r.id));
-  initialRequestsLoaded = true;
+  window.lastRequestIds = new Set(newRequests.map(r=>r.id));
+  window.initialRequestsLoaded = true;
   requests = newRequests;
 
   if(user?.role==='customer') refreshCustomer();
@@ -56,9 +56,9 @@ onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{
 
 function unlockSound(){
   try{
-    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    soundUnlocked = true;
+    if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(window.audioCtx.state === 'suspended') window.audioCtx.resume();
+    window.soundUnlocked = true;
   }catch(e){console.log('unlock sound error',e)}
 }
 
@@ -67,13 +67,13 @@ document.addEventListener('click', unlockSound, {once:true});
 function playNotificationSound(){
   try{
     unlockSound();
-    if(!audioCtx) return;
+    if(!window.audioCtx) return;
 
-    const now = audioCtx.currentTime;
+    const now = window.audioCtx.currentTime;
     const duration = 1.4;
 
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const osc = window.audioCtx.createOscillator();
+    const gain = window.audioCtx.createGain();
 
     osc.type = 'sine';
     osc.frequency.setValueAtTime(880, now);
@@ -86,7 +86,7 @@ function playNotificationSound(){
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(window.audioCtx.destination);
     osc.start(now);
     osc.stop(now + duration);
   }catch(e){console.log('sound error', e)}
