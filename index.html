@@ -21,7 +21,7 @@
 <div class="simpleModal" id="editModal"><div class="simpleBox"><h2 id="editTitle">Edit</h2><input class="input" id="editName" placeholder="Name"><input class="input" id="editUsername" placeholder="Username"><input class="input" id="editPassword" placeholder="Password"><select id="editRole" class="input"><option value="super_admin">super_admin</option><option value="admin">admin</option><option value="customer">customer</option></select><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn gray" id="editCancel">Cancel</button><button class="btn blue" id="editSave">Save</button></div><p id="editStatus"></p></div></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction, arrayUnion, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, where, Timestamp, serverTimestamp, doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction, arrayUnion, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",authDomain:"bamboo-bulwark-459920-p2.firebaseapp.com",projectId:"bamboo-bulwark-459920-p2",storageBucket:"bamboo-bulwark-459920-p2.firebasestorage.app",messagingSenderId:"740396048112",appId:"1:740396048112:web:72874b77b37bff2f3e2c35"};
 const app=initializeApp(firebaseConfig),db=getFirestore(app),$=id=>document.getElementById(id);
 let user=null,requests=[],allUsers=[],companies=[],assignments={},selectedId=null,activeId=localStorage.getItem('activeRequestId'),timerInt=null,startTime=null,pendingBol=null,pendingBolBlob=null,nextPanel=null,previewImages=[],previewIndex=0,currentZoom=1,currentPreviewImage=null,selectedAssignAdmin=null,editMode=null,editTarget=null;
@@ -31,20 +31,27 @@ window.initialRequestsLoaded=false;
 $('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('backShift').onclick=showHome;$('backHours').onclick=showHome;$('backBol').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return}if(nextPanel)nextPanel()};$('bolFile').onchange=readBol;$('loginPassword').onkeydown=e=>{if(e.key==='Enter')login()};$('loginUsername').onkeydown=e=>{if(e.key==='Enter')login()};$('closeModalBtn').onclick=closeImagePreview;$('zoomInBtn').onclick=zoomInImage;$('zoomOutBtn').onclick=zoomOutImage;$('downloadImgBtn').onclick=downloadPreviewImage;$('prevImageBtn').onclick=showPrevImage;$('nextImageBtn').onclick=showNextImage;$('requestSearch').oninput=renderAdmin;$('editCancel').onclick=closeEditModal;$('editSave').onclick=saveEditModal;
 async function ensureTestCompany(){const c=await getDoc(doc(db,'companies','test_company'));if(!c.exists())await setDoc(doc(db,'companies','test_company'),{companyId:'test_company',name:'Test Company',superAdminUsername:'super',superAdminName:'Dalibor',createdAt:serverTimestamp()});}
 ensureTestCompany();
-function isLast10Days(r){
+function tenDaysAgoTimestamp(){
+  const d=new Date();
+  d.setDate(d.getDate()-10);
+  return Timestamp.fromDate(d);
+}
+
+async function deleteOldRequests(){
   try{
-    const d=getDate(r.createdAt);
-    const limit=new Date();
-    limit.setDate(limit.getDate()-10);
-    return d>=limit;
+    const oldSnap=await getDocs(query(collection(db,'requests'),where('createdAt','<',tenDaysAgoTimestamp())));
+    for(const oldDoc of oldSnap.docs){
+      await deleteDoc(doc(db,'requests',oldDoc.id));
+    }
   }catch(e){
-    return true;
+    console.log('old request cleanup error',e);
   }
 }
 
-onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{
-  const allReq=snap.docs.map(d=>({id:d.id,...d.data()}));
-  requests=allReq.filter(isLast10Days);
+deleteOldRequests();
+
+onSnapshot(query(collection(db,'requests'),where('createdAt','>=',tenDaysAgoTimestamp()),orderBy('createdAt','desc')),snap=>{
+  requests=snap.docs.map(d=>({id:d.id,...d.data()}));
   if(user?.role==='customer')refreshCustomer();
   if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin')renderAdmin();
 },err=>alert('Firestore requests error: '+err.message));
@@ -131,4 +138,117 @@ async function takeRequest(id){if(user.role!=='super_admin'){alert('Samo Super A
 async function addUser(){const username=$('newUsername').value.trim(),name=$('newName').value.trim(),password=$('newPassword').value.trim(),role=$('newRole').value,status=$('addUserStatus');if(!username||!name){status.className='error';status.innerText='Popuni username i name.';return}if(await usernameExists(username)){status.className='error';status.innerText='Username je zauzet: '+username;return}const data={username,name,role,active:true,companyId:companyOf(user)};if(role!=='customer')data.password=password||'1234';if(role==='customer')data.bolRequired=false;if(role==='admin')data.assignedCustomers=[];await setDoc(doc(db,'users',username),data);status.className='success';status.innerText='User dodat: '+username;$('newUsername').value='';$('newName').value='';$('newPassword').value=''}window.deleteUserByUsername=async username=>{const u=allUsers.find(x=>userKey(x)===username);if(u?.role==='super_admin'){alert('Super Admin ne može da se obriše.');return}if(!confirm('Da li sigurno brišeš usera: '+username+'?'))return;await deleteDoc(doc(db,'users',username));alert('User obrisan: '+username)};
 window.editUserByUsername=function(username){const u=allUsers.find(x=>userKey(x)===username);if(!u)return;editMode='user';editTarget=u;$('editTitle').innerText='Edit user';$('editName').value=u.name||'';$('editUsername').value=userKey(u);$('editPassword').value=u.password||'';$('editRole').style.display='block';$('editRole').value=u.role||'customer';$('editStatus').innerText='';$('editModal').style.display='flex'}
 function closeEditModal(){$('editModal').style.display='none';editMode=null;editTarget=null;$('editRole').style.display='block'}async function saveEditModal(){const name=$('editName').value.trim(),username=$('editUsername').value.trim(),password=$('editPassword').value.trim(),role=$('editRole').value;if(!name||!username){$('editStatus').className='error';$('editStatus').innerText='Name i username su obavezni.';return}if(editMode==='user'){const oldKey=userKey(editTarget);if(username!==oldKey&&await usernameExists(username)){$('editStatus').className='error';$('editStatus').innerText='Username je zauzet: '+username;return}const data={username,name,role,active:true,companyId:companyOf(editTarget)};if(role!=='customer')data.password=password||'1234';if(role==='customer')data.bolRequired=!!editTarget.bolRequired;if(role==='admin')data.assignedCustomers=Array.isArray(editTarget.assignedCustomers)?editTarget.assignedCustomers:[];if(username!==oldKey){await setDoc(doc(db,'users',username),data);await deleteDoc(doc(db,'users',oldKey))}else await updateDoc(doc(db,'users',oldKey),data);closeEditModal()}if(editMode==='company'){const c=editTarget,oldSuper=c.superAdminUsername,newSuper=username;if(newSuper!==oldSuper&&await usernameExists(newSuper)){$('editStatus').className='error';$('editStatus').innerText='Username je zauzet: '+newSuper;return}await updateDoc(doc(db,'companies',c.id),{name,superAdminUsername:username,superAdminName:name});if(oldSuper&&oldSuper!==newSuper)await deleteDoc(doc(db,'users',oldSuper));await setDoc(doc(db,'users',newSuper),{username:newSuper,name,password:password||'1234',role:'super_admin',companyId:c.id,active:true});closeEditModal()}}
-function getRequestImages(r){const imgs=[];if(r.bolImage)imgs.push(r.bolImage);(Array.isArray(r.messages)?r.messages:[]).forEach(m=>{if(m.bolImage&&!imgs.includes(m.bolImage))imgs.push(m.bolImage)});return imgs}function getImageIndex(r,src){previewImages=getRequestImages(r);const i=previewImages.indexOf(src);return i>=0?i:0}function openImagePreviewByIndex(index){const r=requests.find(x=>x.id===selectedId);previewImages=r?getRequestImages(r):[];if(!previewImages.length)return;previewIndex=Math.max(0,Math.min(index,previewImages.length-1));openImagePreview(previewImages[previewIndex])}function openImagePreview(src){currentPreviewImage=src;currentZoom=1;$('modalImage').src=src;$('modalImage').style.width='85vw';$('imageModal').style.display='flex';setTimeout(()=>{const area=document.querySelector('.imageArea');if(area){area.scrollTop=0;area.scrollLeft=0}},50);updateImageCounter()}function closeImagePreview(){$('imageModal').style.display='none';$('modalImage').src=''}function zoomInImage(){currentZoom=Math.min(currentZoom+.15,2.4);$('modalImage').style.width=(85*currentZoom)+'vw'}function zoomOutImage(){currentZoom=Math.max(currentZoom-.15,.5);$('modalImage').style.width=(85*currentZoom)+'vw'}function downloadPreviewImage
+function getRequestImages(r){
+  const imgs=[];
+  if(r.bolImage) imgs.push(r.bolImage);
+  (Array.isArray(r.messages)?r.messages:[]).forEach(m=>{
+    if(m.bolImage && !imgs.includes(m.bolImage)) imgs.push(m.bolImage);
+  });
+  return imgs;
+}
+
+function getImageIndex(r,src){
+  previewImages=getRequestImages(r);
+  const i=previewImages.indexOf(src);
+  return i>=0?i:0;
+}
+
+function openImagePreviewByIndex(index){
+  const r=requests.find(x=>x.id===selectedId);
+  previewImages=r?getRequestImages(r):[];
+  if(!previewImages.length)return;
+  previewIndex=Math.max(0,Math.min(index,previewImages.length-1));
+  openImagePreview(previewImages[previewIndex]);
+}
+
+function openImagePreview(src){
+  currentPreviewImage=src;
+  currentZoom=1;
+  $('modalImage').src=src;
+  $('modalImage').style.width='85vw';
+  $('imageModal').style.display='flex';
+  setTimeout(()=>{
+    const area=document.querySelector('.imageArea');
+    if(area){area.scrollTop=0;area.scrollLeft=0;}
+  },50);
+  updateImageCounter();
+}
+
+function closeImagePreview(){
+  $('imageModal').style.display='none';
+  $('modalImage').src='';
+}
+
+function zoomInImage(){
+  currentZoom=Math.min(currentZoom+.15,2.4);
+  $('modalImage').style.width=(85*currentZoom)+'vw';
+}
+
+function zoomOutImage(){
+  currentZoom=Math.max(currentZoom-.15,.5);
+  $('modalImage').style.width=(85*currentZoom)+'vw';
+}
+
+function downloadPreviewImage(){
+  if(!currentPreviewImage)return;
+  const a=document.createElement('a');
+  a.href=currentPreviewImage;
+  a.download='bol-image-'+(previewIndex+1)+'.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function showPrevImage(){
+  if(!previewImages.length)return;
+  previewIndex=(previewIndex-1+previewImages.length)%previewImages.length;
+  openImagePreview(previewImages[previewIndex]);
+}
+
+function showNextImage(){
+  if(!previewImages.length)return;
+  previewIndex=(previewIndex+1)%previewImages.length;
+  openImagePreview(previewImages[previewIndex]);
+}
+
+function updateImageCounter(){
+  $('imageCounter').innerText=previewImages.length?(previewIndex+1)+' / '+previewImages.length:'';
+}
+
+async function usernameExists(username){
+  const snap=await getDoc(doc(db,'users',username));
+  return snap.exists();
+}
+
+function getAssignedCustomers(adminUsername,companyId){
+  const id=companyId+'_'+adminUsername;
+  if(Array.isArray(assignments[id])) return assignments[id];
+  const admin=allUsers.find(u=>userKey(u)===adminUsername&&companyOf(u)===companyId);
+  return Array.isArray(admin?.assignedCustomers)?admin.assignedCustomers:[];
+}
+
+function slug(s){
+  return String(s||'company').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'company';
+}
+
+function getDate(v){
+  if(v?.toDate)return v.toDate();
+  if(typeof v==='number')return new Date(v);
+  return new Date(v||Date.now());
+}
+
+function formatDate(v){
+  if(!v)return'-';
+  return getDate(v).toLocaleString([],{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function esc(t){
+  return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function escAttr(t){
+  return esc(t);
+}
+</script>
+</body>
+</html>
