@@ -31,10 +31,26 @@ window.initialRequestsLoaded=false;
 $('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('backShift').onclick=showHome;$('backHours').onclick=showHome;$('backBol').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return}if(nextPanel)nextPanel()};$('bolFile').onchange=readBol;$('loginPassword').onkeydown=e=>{if(e.key==='Enter')login()};$('loginUsername').onkeydown=e=>{if(e.key==='Enter')login()};$('closeModalBtn').onclick=closeImagePreview;$('zoomInBtn').onclick=zoomInImage;$('zoomOutBtn').onclick=zoomOutImage;$('downloadImgBtn').onclick=downloadPreviewImage;$('prevImageBtn').onclick=showPrevImage;$('nextImageBtn').onclick=showNextImage;$('requestSearch').oninput=renderAdmin;$('editCancel').onclick=closeEditModal;$('editSave').onclick=saveEditModal;
 async function ensureTestCompany(){const c=await getDoc(doc(db,'companies','test_company'));if(!c.exists())await setDoc(doc(db,'companies','test_company'),{companyId:'test_company',name:'Test Company',superAdminUsername:'super',superAdminName:'Dalibor',createdAt:serverTimestamp()});}
 ensureTestCompany();
+let lastRequestIds = new Set();
+
 onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{
-  requests=snap.docs.map(d=>({id:d.id,...d.data()}));
-  if(user?.role==='customer')refreshCustomer();
-  if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin')renderAdmin();
+  const newRequests = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // samo za admine
+  if(user?.role==='admin' || user?.role==='super_admin'){
+    newRequests.forEach(r=>{
+      if(r.status==='NEW' && !lastRequestIds.has(r.id)){
+        playBeep();
+      }
+    });
+  }
+
+  lastRequestIds = new Set(newRequests.map(r=>r.id));
+  requests = newRequests;
+
+  if(user?.role==='customer') refreshCustomer();
+  if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin') renderAdmin();
+
 },err=>alert('Firestore requests error: '+err.message));
 
 onSnapshot(collection(db,'users'),snap=>{allUsers=snap.docs.map(d=>({id:d.id,...d.data()}));if(user&&user.role!=='full_admin'){const fresh=allUsers.find(u=>userKey(u)===userKey(user));if(fresh){user=fresh;localStorage.setItem('user',JSON.stringify(user));$('userInfo').innerText=(user.name||user.username)+' / '+user.role+' / '+getCompanyName(user.companyId)}}if(user?.role==='customer')refreshCustomer();if(user?.role==='super_admin'||user?.role==='full_admin')renderAdmin()},err=>alert('Firestore users error: '+err.message));
@@ -105,6 +121,16 @@ function esc(t){
 
 function escAttr(t){
   return esc(t);
+}
+  function playBeep(){
+  try{
+    const audio = new Audio();
+    audio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+    audio.volume = 1;
+    audio.play();
+  }catch(e){
+    console.log("sound error", e);
+  }
 }
 
 </script>
