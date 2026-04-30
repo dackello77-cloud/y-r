@@ -26,7 +26,7 @@ import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTim
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 const firebaseConfig={apiKey:"AIzaSyAAukYJ0uf7KA-rSl3OC60cWiVbgS8EoSo",authDomain:"bamboo-bulwark-459920-p2.firebaseapp.com",projectId:"bamboo-bulwark-459920-p2",storageBucket:"bamboo-bulwark-459920-p2.firebasestorage.app",messagingSenderId:"740396048112",appId:"1:740396048112:web:72874b77b37bff2f3e2c35"};
 const app=initializeApp(firebaseConfig),db=getFirestore(app),storage=getStorage(app),$=id=>document.getElementById(id);
-let user=null,requests=[],allUsers=[],companies=[],assignments={},selectedId=null,activeId=localStorage.getItem('activeRequestId'),timerInt=null,startTime=null,pendingBol=null,pendingBolBlob=null,nextPanel=null,previewImages=[],previewIndex=0,currentZoom=1,currentPreviewImage=null,selectedAssignAdmin=null,editMode=null,editTarget=null;
+let user=null,requests=[],allUsers=[],companies=[],assignments={},selectedId=null,activeId=localStorage.getItem('activeRequestId'),timerInt=null,startTime=null,pendingBol=null,pendingBolBlob=null,pendingBolFallback=null,nextPanel=null,previewImages=[],previewIndex=0,currentZoom=1,currentPreviewImage=null,selectedAssignAdmin=null,editMode=null,editTarget=null;
 $('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('backShift').onclick=showHome;$('backHours').onclick=showHome;$('backBol').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return}if(nextPanel)nextPanel()};$('bolFile').onchange=readBol;$('loginPassword').onkeydown=e=>{if(e.key==='Enter')login()};$('loginUsername').onkeydown=e=>{if(e.key==='Enter')login()};$('closeModalBtn').onclick=closeImagePreview;$('zoomInBtn').onclick=zoomInImage;$('zoomOutBtn').onclick=zoomOutImage;$('downloadImgBtn').onclick=downloadPreviewImage;$('prevImageBtn').onclick=showPrevImage;$('nextImageBtn').onclick=showNextImage;$('requestSearch').oninput=renderAdmin;$('editCancel').onclick=closeEditModal;$('editSave').onclick=saveEditModal;
 async function ensureTestCompany(){const c=await getDoc(doc(db,'companies','test_company'));if(!c.exists())await setDoc(doc(db,'companies','test_company'),{companyId:'test_company',name:'Test Company',superAdminUsername:'super',superAdminName:'Dalibor',createdAt:serverTimestamp()});}
 ensureTestCompany();
@@ -179,9 +179,8 @@ function esc(t){
   return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function escAttr(t){
-  return esc(t);
-}
+function escAttr(t){return esc(t);}
+
 </script>
 </body>
 </html>
