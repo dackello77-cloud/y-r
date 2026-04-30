@@ -100,4 +100,32 @@ function getAssignedCustomers(adminUsername,companyId){
   const id=companyId+'_'+adminUsername;
   if(Array.isArray(assignments[id])) return assignments[id];
   const admin=allUsers.find(u=>userKey(u)===adminUsername&&companyOf(u)===companyId);
-  re
+  return Array.isArray(admin?.assignedCustomers)?admin.assignedCustomers:[];
+}
+
+function slug(s){
+  return String(s||'company').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'company';
+}
+
+function getDate(v){
+  if(v?.toDate)return v.toDate();
+  if(typeof v==='number')return new Date(v);
+  return new Date(v||Date.now());
+}
+
+function formatDate(v){
+  if(!v)return'-';
+  return getDate(v).toLocaleString([],{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function esc(t){
+  return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function escAttr(t){
+  return esc(t);
+}
+
+</script>
+</body>
+</html>
