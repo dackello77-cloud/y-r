@@ -50,11 +50,21 @@ async function deleteOldRequests(){
 
 deleteOldRequests();
 
-onSnapshot(query(collection(db,'requests'),where('createdAt','>=',tenDaysAgoTimestamp()),orderBy('createdAt','desc')),snap=>{
-  requests=snap.docs.map(d=>({id:d.id,...d.data()}));
-  if(user?.role==='customer')refreshCustomer();
-  if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin')renderAdmin();
-},err=>alert('Firestore requests error: '+err.message));
+onSnapshot(
+  query(
+    collection(db,'requests'),
+    where('createdAt','>=',tenDaysAgoTimestamp()),
+    where('status','in',['NEW','TAKEN']),
+    orderBy('createdAt','desc')
+  ),
+  snap=>{
+    requests = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+    if(user?.role==='customer') refreshCustomer();
+    if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin') renderAdmin();
+  },
+  err=>alert('Firestore requests error: '+err.message)
+);
 
 onSnapshot(collection(db,'users'),snap=>{allUsers=snap.docs.map(d=>({id:d.id,...d.data()}));if(user&&user.role!=='full_admin'){const fresh=allUsers.find(u=>userKey(u)===userKey(user));if(fresh){user=fresh;localStorage.setItem('user',JSON.stringify(user));$('userInfo').innerText=(user.name||user.username)+' / '+user.role+' / '+getCompanyName(user.companyId)}}if(user?.role==='customer')refreshCustomer();if(user?.role==='super_admin'||user?.role==='full_admin')renderAdmin()},err=>alert('Firestore users error: '+err.message));
 onSnapshot(collection(db,'companies'),snap=>{companies=snap.docs.map(d=>({id:d.id,...d.data()}));if(user?.role==='full_admin')renderFullAdminPanel();if(user&&user.role!=='customer')renderAdmin()},err=>alert('Firestore companies error: '+err.message));
