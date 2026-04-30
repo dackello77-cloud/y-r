@@ -122,14 +122,44 @@ function esc(t){
 function escAttr(t){
   return esc(t);
 }
-  function playBeep(){
+  let soundReady = false;
+let audioCtx = null;
+
+function unlockBeep(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended'){
+    audioCtx.resume();
+  }
+  soundReady = true;
+}
+
+document.addEventListener('click', unlockBeep);
+
+function playBeep(){
   try{
-    const audio = new Audio();
-    audio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
-    audio.volume = 1;
-    audio.play();
+    unlockBeep();
+    if(!audioCtx) return;
+
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, now);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.6, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 1.2);
   }catch(e){
-    console.log("sound error", e);
+    console.log('sound error', e);
   }
 }
 
