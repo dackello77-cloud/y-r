@@ -117,30 +117,14 @@ async function uploadBolToStorage(type,value){
 }
 
 async function sendRequest(type,value){try{const existing=getCustomerTicket();const bolImageUrl=await uploadBolToStorage(type,value);const base={companyId:companyOf(user),customerUsername:user.username,customerName:user.name||user.username,type,value,status:'NEW',createdAt:serverTimestamp(),takenByName:null,takenByUsername:null,takenAt:null,doneByName:null,doneAt:null,bolImage:bolImageUrl||null};if(existing){await updateDoc(doc(db,'requests',existing.id),{...base,bolImage:bolImageUrl||existing.bolImage||null,messages:arrayUnion({sender:user.name||user.username,text:type+' '+value+' new request in same ticket',createdAt:Date.now(),bolImage:bolImageUrl||null})});if(user.bolRequired){await updateDoc(doc(db,'users',user.username),{bolRequired:false});user.bolRequired=false;localStorage.setItem('user',JSON.stringify(user))}activeId=existing.id;localStorage.setItem('activeRequestId',activeId);pendingBol=null;pendingBolBlob=null;refreshCustomer();return}const ref=await addDoc(collection(db,'requests'),{...base,messages:[{sender:user.name||user.username,text:type+' '+value+' request sent.',createdAt:Date.now(),bolImage:bolImageUrl||null}]});if(user.bolRequired){await updateDoc(doc(db,'users',user.username),{bolRequired:false});user.bolRequired=false;localStorage.setItem('user',JSON.stringify(user))}activeId=ref.id;localStorage.setItem('activeRequestId',activeId);pendingBol=null;pendingBolBlob=null;refreshCustomer()}catch(err){alert('Greška kod slanja requesta/BOL slike: '+err.message+'\nProbaj manju sliku ili slikaj malo dalje.')}}
-function renderAdmin(){if(user.role==='full_admin'){renderFullAdminPanel();return}const list=$('requestList');let visible=requests.filter(r=>sameCompany(r));if(user.role==='admin')visible=visible.filter(r=>getAssignedCustomers(userKey(user),companyOf(user)).includes(r.customerUsername));const search=($('requestSearch')?.value||'').toLowerCase().trim();if(search)visible=visible.filter(r=>(r.customerName||'').toLowerCase().includes(search)||(r.customerUsername||'').toLowerCase().includes(search));$('count').innerText=visible.length;list.innerHTML='';const rank={NEW:1,TAKEN:2,DONE:3},sorted=[...visible].sort((a,b)=>((rank[a.status]||9)-(rank[b.status]||9))||(getDate(b.createdAt)-getDate(a.createdAt)));if(!selectedId&&sorted[0])selectedId=sorted[0].id;if(selectedId&&!sorted.find(r=>r.id===selectedId))selectedId=sorted[0]?.id||null;if(!sorted.length){list.innerHTML='<div class="line">No requests yet.</div>';if(user.role==='super_admin'){renderSuperAdminHome();return;}}sorted.forEach(r=>{const div=document.createElement('div');div.className='card '+(r.status==='NEW'?'new':r.status==='TAKEN'?'taken':'done')+(r.id===selectedId?' sel':'');div.innerHTML=`<b>${esc(r.customerName)}</b><br>${esc(r.type)} ${esc(r.value)}<br>Status: ${esc(r.status)}<br>Taken by: ${esc(r.takenByName||'-')}`;div.onclick=()=>{selectedId=r.id;renderAdmin()};list.appendChild(div)});
-
-if(user.role==='super_admin'||user.role==='admin'){
-  const customers=allUsers.filter(u=>u.role==='customer'&&companyOf(u)===companyOf(user));
-  const title=document.createElement('div');
-  title.className='line';
-  title.style.marginTop='18px';
-  title.innerHTML='<b>Customers</b>';
-  list.appendChild(title);
-  customers.forEach(c=>{
-    const key=userKey(c);
-    const div=document.createElement('div');
-    div.className='card done';
-    div.innerHTML=`<b>${esc(userLabel(c))}</b><br>${esc(key)}<br>View chat / Require BOL`;
-    div.onclick=()=>renderCustomerProfile(key);
-    list.appendChild(div);
-  });
-}
+function renderAdmin(){if(user.role==='full_admin'){renderFullAdminPanel();return}const list=$('requestList');let visible=requests.filter(r=>sameCompany(r)).filter(r=>r.status!=='DONE');if(user.role==='admin')visible=visible.filter(r=>getAssignedCustomers(userKey(user),companyOf(user)).includes(r.customerUsername));const search=($('requestSearch')?.value||'').toLowerCase().trim();if(search)visible=visible.filter(r=>(r.customerName||'').toLowerCase().includes(search)||(r.customerUsername||'').toLowerCase().includes(search));$('count').innerText=visible.length;list.innerHTML='';const rank={NEW:1,TAKEN:2,DONE:3},sorted=[...visible].sort((a,b)=>((rank[a.status]||9)-(rank[b.status]||9))||(getDate(b.createdAt)-getDate(a.createdAt)));if(!selectedId&&sorted[0])selectedId=sorted[0].id;if(selectedId&&!sorted.find(r=>r.id===selectedId))selectedId=sorted[0]?.id||null;if(!sorted.length){list.innerHTML='<div class="line">No active requests.</div>';if(user.role==='super_admin'||user.role==='admin'){renderSuperAdminHome();return;}}sorted.forEach(r=>{const div=document.createElement('div');div.className='card '+(r.status==='NEW'?'new':r.status==='TAKEN'?'taken':'done')+(r.id===selectedId?' sel':'');div.innerHTML=`<b>${esc(r.customerName)}</b><br>${esc(r.type)} ${esc(r.value)}<br>Status: ${esc(r.status)}<br>Taken by: ${esc(r.takenByName||'-')}`;div.onclick=()=>{selectedId=r.id;renderAdmin()};list.appendChild(div)});
 
 renderDetails()}
 function renderSuperAdminHome(){
-  $('details').innerHTML=`<div class="tabs"><button class="btn blue" id="tabUsers">Add / Manage Users</button></div><div id="tabContent"></div>`;
+  $('details').innerHTML=`<div class="tabs"><button class="btn blue" id="tabCustomers">Customers</button><button class="btn gray" id="tabUsers">Add / Manage Users</button></div><div id="tabContent"></div>`;
+  $('tabCustomers').onclick=renderCustomerTab;
   $('tabUsers').onclick=renderUserTab;
-  renderUserTab();
+  renderCustomerTab();
 }
 
 function renderFullAdminPanel(){hideAll();$('admin').style.display='block';$('roleBadge').innerText='full_admin';$('requestList').innerHTML='<div class="line">Companies</div>';$('count').innerText=companies.length;$('details').innerHTML=`<h2>Full Admin - Companies</h2><div class="msg"><h3>Add company</h3><input class="input" id="newCompanyName" placeholder="Company name"><input class="input" id="newCompanySuperUser" placeholder="Super admin username"><input class="input" id="newCompanySuperName" placeholder="Super admin name"><input class="input" id="newCompanySuperPass" placeholder="Super admin password"><button class="btn blue" id="createCompanyBtn">Create company</button><p id="companyStatus"></p></div><div class="hr"></div>${companies.map(c=>`<div class="msg"><b>${esc(c.name)}</b><br>Company ID: ${esc(c.id)}<br>Super Admin: ${esc(c.superAdminName||c.superAdminUsername||'-')} (${esc(c.superAdminUsername||'-')})<br><button class="btn blue" onclick="window.editCompany('${escAttr(c.id)}')">Edit</button><button class="btn redbtn" onclick="window.deleteCompany('${escAttr(c.id)}')">Delete</button></div>`).join('')}`;$('createCompanyBtn').onclick=createCompany}
@@ -151,12 +135,37 @@ function renderCustomerProfile(customerUsername){
   const customer=allUsers.find(u=>userKey(u)===customerUsername);
   const lastReq=requests.filter(r=>r.customerUsername===customerUsername&&companyOf(r)===companyOf(user)).sort((a,b)=>getDate(b.createdAt)-getDate(a.createdAt))[0];
   const msgs=lastReq&&Array.isArray(lastReq.messages)?lastReq.messages:[];
-  $('details').innerHTML=`<h2>${esc(userLabel(customer)||customerUsername)}</h2><div class="line"><b>Username:</b> ${esc(customerUsername)}</div><div class="line"><b>Status:</b> ${lastReq?esc(lastReq.status):'No request in last 10 days'}</div><div class="actions"><button class="btn redbtn" id="bolCustomerBtn">Require BOL next time</button></div><div class="chat" id="chatBox">${msgs.map((m,i)=>`<div class="msg ${i===msgs.length-1?'lastMsg':''}"><b>${esc(m.sender)}:</b> ${esc(m.text)} ${m.bolImage?`<button class="inlineImageIcon" data-img-index="${lastReq?getImageIndex(lastReq,m.bolImage):0}">🖼️</button>`:''}<span class="mini">(${formatDate(m.createdAt)})</span></div>`).join('')||'<div class="line">No chat in last 10 days.</div>'}</div>`;
+  $('details').innerHTML=`<div class="tabs"><button class="btn gray" id="backToCustomersBtn">← Back</button></div><h2>${esc(userLabel(customer)||customerUsername)}</h2><div class="line"><b>Username:</b> ${esc(customerUsername)}</div><div class="line"><b>Status:</b> ${lastReq?esc(lastReq.status):'No request in last 10 days'}</div><div class="actions"><button class="btn redbtn" id="bolCustomerBtn">Require BOL next time</button></div><div class="chat" id="chatBox">${msgs.map((m,i)=>`<div class="msg ${i===msgs.length-1?'lastMsg':''}"><b>${esc(m.sender)}:</b> ${esc(m.text)} ${m.bolImage?`<button class="inlineImageIcon" data-img-index="${lastReq?getImageIndex(lastReq,m.bolImage):0}">🖼️</button>`:''}<span class="mini">(${formatDate(m.createdAt)})</span></div>`).join('')||'<div class="line">No chat in last 10 days.</div>'}</div>`;
+  $('backToCustomersBtn').onclick=()=>{renderSuperAdminHome();};
   $('bolCustomerBtn').onclick=async()=>{await updateDoc(doc(db,'users',customerUsername),{bolRequired:true});alert('BOL uključen za: '+(userLabel(customer)||customerUsername));};
   document.querySelectorAll('.inlineImageIcon').forEach(btn=>btn.onclick=()=>openImagePreviewByIndex(Number(btn.dataset.imgIndex||0)));
 }
 
-function renderDetails(){const r=requests.find(x=>x.id===selectedId);if(!r){if(user.role==='super_admin'){renderSuperAdminHome();return;}$('details').innerHTML='Select request.';return}const isSuper=user.role==='super_admin';$('details').innerHTML=`<div class="tabs"><button class="btn blue" id="tabChat">Chat</button>${isSuper?'<button class="btn gray" id="tabUsers">Add / Manage Users</button>':''}</div><div id="tabContent"></div>`;$('tabChat').onclick=()=>renderChatTab(r);if(isSuper)$('tabUsers').onclick=renderUserTab;renderChatTab(r)}
+function renderCustomerTab(){
+  const customers=allUsers.filter(u=>u.role==='customer'&&companyOf(u)===companyOf(user));
+  $('tabContent').innerHTML=`<h2>Customers</h2><input class="input" id="customerSearchBox" placeholder="Search customer..."><div id="customerListBox"></div>`;
+  $('customerSearchBox').oninput=renderCustomerListBox;
+  renderCustomerListBox();
+}
+
+function renderCustomerListBox(){
+  const box=$('customerListBox');
+  if(!box)return;
+  const q=($('customerSearchBox')?.value||'').toLowerCase().trim();
+  const customers=allUsers
+    .filter(u=>u.role==='customer'&&companyOf(u)===companyOf(user))
+    .filter(c=>!q||(userLabel(c)+' '+userKey(c)).toLowerCase().includes(q));
+  box.innerHTML=customers.map(c=>{
+    const key=userKey(c);
+    return `<div class="msg" style="cursor:pointer" onclick="window.openCustomerChat('${escAttr(key)}')"><b>${esc(userLabel(c))}</b><br><span class="mini">${esc(key)}</span></div>`;
+  }).join('')||'<div class="line">No customers found.</div>';
+}
+
+window.openCustomerChat=function(customerUsername){
+  renderCustomerProfile(customerUsername);
+}
+
+function renderDetails(){const r=requests.find(x=>x.id===selectedId);if(!r){if(user.role==='super_admin'||user.role==='admin'){renderSuperAdminHome();return;}$('details').innerHTML='Select request.';return}const isSuper=user.role==='super_admin';$('details').innerHTML=`<div class="tabs"><button class="btn blue" id="tabChat">Chat</button><button class="btn gray" id="tabCustomers">Customers</button>${isSuper?'<button class="btn gray" id="tabUsers">Add / Manage Users</button>':''}</div><div id="tabContent"></div>`;$('tabChat').onclick=()=>renderChatTab(r);$('tabCustomers').onclick=renderCustomerTab;if(isSuper)$('tabUsers').onclick=renderUserTab;renderChatTab(r)}
 function renderChatTab(r){const msgs=Array.isArray(r.messages)?r.messages:[];const isSuper=user.role==='super_admin';const isTakenByOther=r.status==='TAKEN'&&r.takenByUsername&&r.takenByUsername!==user.username;const canWork=isSuper&&(r.status==='NEW'||(r.status==='TAKEN'&&r.takenByUsername===user.username));const takeDisabled=!isSuper||r.status!=='NEW';const doneDisabled=!isSuper||r.status!=='TAKEN'||isTakenByOther;$('tabContent').innerHTML=`<h2>${esc(r.type)} ${esc(r.value)}</h2><div class="line"><b>Company:</b> ${esc(getCompanyName(companyOf(r)))}</div><div class="line"><b>Customer:</b> ${esc(r.customerName)}</div><div class="line"><b>Status:</b> ${esc(r.status)}</div><div class="line"><b>Created:</b> ${formatDate(r.createdAt)}</div><div class="line"><b>Taken at:</b> ${formatDate(r.takenAt)}</div><div class="line"><b>Done at:</b> ${formatDate(r.doneAt)}</div><div class="line"><b>Operator:</b> ${esc(r.takenByName||'-')}</div><div class="line"><b>Done by:</b> ${esc(r.doneByName||'-')}</div>${isTakenByOther?`<div class="line" style="color:#facc15"><b>Locked:</b> ovaj request radi ${esc(r.takenByName||'drugi operator')}. Možeš samo da pregledaš.</div>`:''}<div class="actions"><button class="btn blue ${takeDisabled?'disabled':''}" id="takeBtn" ${takeDisabled?'disabled':''}>Preuzmi</button><button class="btn green ${doneDisabled?'disabled':''}" id="doneBtn" ${doneDisabled?'disabled':''}>Završeno</button><button class="btn redbtn" id="bolReqBtn">Require BOL next time</button></div><div class="chat" id="chatBox">${msgs.map((m,i)=>`<div class="msg ${i===msgs.length-1?'lastMsg':''}"><b>${esc(m.sender)}:</b> ${esc(m.text)} ${m.bolImage?`<button class="inlineImageIcon" data-img-index="${getImageIndex(r,m.bolImage)}">🖼️</button>`:''}<span class="mini">(${formatDate(m.createdAt)})</span></div>`).join('')}</div><div style="display:flex;gap:8px"><input class="input" id="chatInput" placeholder="Message" ${!canWork?'disabled':''}><button class="btn blue ${!canWork?'disabled':''}" id="sendMsgBtn" ${!canWork?'disabled':''}>Send</button></div>`;document.querySelectorAll('.inlineImageIcon').forEach(btn=>btn.onclick=()=>openImagePreviewByIndex(Number(btn.dataset.imgIndex||0)));$('takeBtn').onclick=()=>takeRequest(r.id);$('doneBtn').onclick=()=>doneRequest(r.id);$('bolReqBtn').onclick=()=>requireBol(r);$('sendMsgBtn').onclick=()=>{if(canWork)sendMsg(r.id)};$('chatInput').onkeydown=e=>{if(e.key==='Enter'&&canWork)sendMsg(r.id)};setTimeout(()=>{const c=$('chatBox');if(c)c.scrollTop=c.scrollHeight},50)}
 function renderUserTab(){selectedAssignAdmin=null;$('tabContent').innerHTML=`<h2>${esc(getCompanyName(companyOf(user)))} - Users</h2><input class="input" id="newUsername" placeholder="username"><input class="input" id="newName" placeholder="name / company"><input class="input" id="newPassword" placeholder="password"><select id="newRole"><option value="admin">admin</option><option value="customer">customer</option><option value="super_admin">super_admin</option></select><button class="btn blue" id="addUserBtn">Add user</button><p class="note">Za customer password može da ostane prazan.</p><p id="addUserStatus"></p><div class="hr"></div><h2>Manage Users</h2><input class="input" id="manageUserSearch" placeholder="Search user..."><div id="manageUsersList"></div><div class="hr"></div><h2>Assign Customers to Admin</h2><input class="input" id="assignAdminSearch" placeholder="Search admin..."><div id="adminAssignList"></div><input class="input" id="assignCustomerSearch" placeholder="Search customer..."><div id="selectedAdminInfo" class="line">Izaberi admina.</div><div id="customerChecklist"></div><button class="btn blue" id="saveAssignmentsBtn">Save assignments</button><p id="assignmentStatus"></p>`;$('addUserBtn').onclick=addUser;$('manageUserSearch').oninput=renderManageUsers;$('assignAdminSearch').oninput=()=>{selectedAssignAdmin=null;renderAdminAssignList();renderCustomerAssignList()};$('assignCustomerSearch').oninput=renderCustomerAssignList;$('saveAssignmentsBtn').onclick=saveAssignments;renderManageUsers();renderAdminAssignList();renderCustomerAssignList()}
 function companyUsers(){return allUsers.filter(u=>companyOf(u)===companyOf(user))}function renderManageUsers(){const box=$('manageUsersList');if(!box)return;const q=($('manageUserSearch')?.value||'').toLowerCase().trim();const users=companyUsers().filter(u=>!q||(userLabel(u)+' '+userKey(u)+' '+(u.role||'')).toLowerCase().includes(q));box.innerHTML=users.map(u=>{const key=userKey(u),canDelete=u.role!=='super_admin';return`<div class="msg"><b>${esc(userLabel(u))}</b><br>username: ${esc(key)}<br>role: ${esc(u.role)}<br><button class="btn blue" onclick="window.editUserByUsername('${escAttr(key)}')">Edit</button> ${canDelete?`<button class="btn redbtn" onclick="window.deleteUserByUsername('${escAttr(key)}')">Delete</button>`:''}</div>`}).join('')||'<div class="line">No users found.</div>'}
@@ -165,191 +174,4 @@ function getSelectedAssignAdminObj(){return companyUsers().find(u=>u.role==='adm
 async function takeRequest(id){if(user.role!=='super_admin'){alert('Samo Super Admin može da preuzme task.');return}await runTransaction(db,async t=>{const ref=doc(db,'requests',id),snap=await t.get(ref);if(!snap.exists())return;const data=snap.data();if(data.status!=='NEW')return;t.update(ref,{status:'TAKEN',takenByName:user.name||user.username,takenByUsername:user.username,takenAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Taken by '+(user.name||user.username),createdAt:Date.now()})})})}async function doneRequest(id){if(user.role!=='super_admin'){alert('Samo Super Admin može da zatvori task.');return}const r=requests.find(x=>x.id===id);if(!r)return;if(r.status!=='TAKEN'||r.takenByUsername!==user.username){alert('Samo Super Admin koji je preuzeo request može da klikne Završeno.');return}await updateDoc(doc(db,'requests',id),{status:'DONE',doneByName:user.name||user.username,doneAt:serverTimestamp(),messages:arrayUnion({sender:'System',text:'Finished by '+(user.name||user.username),createdAt:Date.now()})})}async function requireBol(r){if(!r.customerUsername){alert('No customer username.');return}await updateDoc(doc(db,'users',r.customerUsername),{bolRequired:true});await updateDoc(doc(db,'requests',r.id),{messages:arrayUnion({sender:'System',text:'BOL required enabled for next request.',createdAt:Date.now()})});alert('BOL uključen za: '+r.customerName)}async function sendMsg(id){if(user.role!=='super_admin'){alert('Samo Super Admin može da šalje poruke u tasku.');return}const r=requests.find(x=>x.id===id);if(r&&r.status==='TAKEN'&&r.takenByUsername!==user.username){alert('Samo Super Admin koji je preuzeo request može da šalje poruke.');return}const input=$('chatInput'),text=input.value.trim();if(!text)return;await updateDoc(doc(db,'requests',id),{messages:arrayUnion({sender:user.name||user.username,text,createdAt:Date.now()})});input.value=''}
 async function addUser(){const username=$('newUsername').value.trim(),name=$('newName').value.trim(),password=$('newPassword').value.trim(),role=$('newRole').value,status=$('addUserStatus');if(!username||!name){status.className='error';status.innerText='Popuni username i name.';return}if(await usernameExists(username)){status.className='error';status.innerText='Username je zauzet: '+username;return}const data={username,name,role,active:true,companyId:companyOf(user)};if(role!=='customer')data.password=password||'1234';if(role==='customer')data.bolRequired=false;if(role==='admin')data.assignedCustomers=[];await setDoc(doc(db,'users',username),data);status.className='success';status.innerText='User dodat: '+username;$('newUsername').value='';$('newName').value='';$('newPassword').value=''}window.deleteUserByUsername=async username=>{const u=allUsers.find(x=>userKey(x)===username);if(u?.role==='super_admin'){alert('Super Admin ne može da se obriše.');return}if(!confirm('Da li sigurno brišeš usera: '+username+'?'))return;await deleteDoc(doc(db,'users',username));alert('User obrisan: '+username)};
 window.editUserByUsername=function(username){
-  const u=allUsers.find(x=>userKey(x)===username);
-  if(!u)return;
-  editMode='user';
-  editTarget=u;
-  $('editTitle').innerText='Edit user';
-  $('editName').value=u.name||'';
-  $('editUsername').value=userKey(u);
-  $('editPassword').value=u.password||'';
-  $('editRole').style.display='block';
-  $('editRole').value=u.role||'customer';
-  $('editStatus').innerText='';
-  $('editModal').style.display='flex';
-}
-
-function closeEditModal(){
-  $('editModal').style.display='none';
-  editMode=null;
-  editTarget=null;
-  $('editRole').style.display='block';
-}
-
-async function saveEditModal(){
-  const name=$('editName').value.trim();
-  const username=$('editUsername').value.trim();
-  const password=$('editPassword').value.trim();
-  const role=$('editRole').value;
-
-  if(!name||!username){
-    $('editStatus').className='error';
-    $('editStatus').innerText='Name i username su obavezni.';
-    return;
-  }
-
-  if(editMode==='user'){
-    const oldKey=userKey(editTarget);
-
-    if(username!==oldKey && await usernameExists(username)){
-      $('editStatus').className='error';
-      $('editStatus').innerText='Username je zauzet: '+username;
-      return;
-    }
-
-    const data={username,name,role,active:true,companyId:companyOf(editTarget)};
-    if(role!=='customer')data.password=password||'1234';
-    if(role==='customer')data.bolRequired=!!editTarget.bolRequired;
-    if(role==='admin')data.assignedCustomers=Array.isArray(editTarget.assignedCustomers)?editTarget.assignedCustomers:[];
-
-    if(username!==oldKey){
-      await setDoc(doc(db,'users',username),data);
-      await deleteDoc(doc(db,'users',oldKey));
-    }else{
-      await updateDoc(doc(db,'users',oldKey),data);
-    }
-    closeEditModal();
-  }
-
-  if(editMode==='company'){
-    const c=editTarget;
-    const oldSuper=c.superAdminUsername;
-    const newSuper=username;
-
-    if(newSuper!==oldSuper && await usernameExists(newSuper)){
-      $('editStatus').className='error';
-      $('editStatus').innerText='Username je zauzet: '+newSuper;
-      return;
-    }
-
-    await updateDoc(doc(db,'companies',c.id),{name,superAdminUsername:newSuper,superAdminName:name});
-    if(oldSuper&&oldSuper!==newSuper)await deleteDoc(doc(db,'users',oldSuper));
-    await setDoc(doc(db,'users',newSuper),{username:newSuper,name,password:password||'1234',role:'super_admin',companyId:c.id,active:true});
-    closeEditModal();
-  }
-}
-
-function getRequestImages(r){
-  const imgs=[];
-  if(r.bolImage)imgs.push(r.bolImage);
-  (Array.isArray(r.messages)?r.messages:[]).forEach(m=>{
-    if(m.bolImage&&!imgs.includes(m.bolImage))imgs.push(m.bolImage);
-  });
-  return imgs;
-}
-
-function getImageIndex(r,src){
-  previewImages=getRequestImages(r);
-  const i=previewImages.indexOf(src);
-  return i>=0?i:0;
-}
-
-function openImagePreviewByIndex(index){
-  const r=requests.find(x=>x.id===selectedId);
-  previewImages=r?getRequestImages(r):[];
-  if(!previewImages.length)return;
-  previewIndex=Math.max(0,Math.min(index,previewImages.length-1));
-  openImagePreview(previewImages[previewIndex]);
-}
-
-function openImagePreview(src){
-  currentPreviewImage=src;
-  currentZoom=1;
-  $('modalImage').src=src;
-  $('modalImage').style.width='85vw';
-  $('imageModal').style.display='flex';
-  setTimeout(()=>{
-    const area=document.querySelector('.imageArea');
-    if(area){area.scrollTop=0;area.scrollLeft=0;}
-  },50);
-  updateImageCounter();
-}
-
-function closeImagePreview(){
-  $('imageModal').style.display='none';
-  $('modalImage').src='';
-}
-
-function zoomInImage(){
-  currentZoom=Math.min(currentZoom+0.15,2.4);
-  $('modalImage').style.width=(85*currentZoom)+'vw';
-}
-
-function zoomOutImage(){
-  currentZoom=Math.max(currentZoom-0.15,0.5);
-  $('modalImage').style.width=(85*currentZoom)+'vw';
-}
-
-function downloadPreviewImage(){
-  if(!currentPreviewImage)return;
-  const a=document.createElement('a');
-  a.href=currentPreviewImage;
-  a.download='bol-image-'+(previewIndex+1)+'.jpg';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-function showPrevImage(){
-  if(!previewImages.length)return;
-  previewIndex=(previewIndex-1+previewImages.length)%previewImages.length;
-  openImagePreview(previewImages[previewIndex]);
-}
-
-function showNextImage(){
-  if(!previewImages.length)return;
-  previewIndex=(previewIndex+1)%previewImages.length;
-  openImagePreview(previewImages[previewIndex]);
-}
-
-function updateImageCounter(){
-  $('imageCounter').innerText=previewImages.length?(previewIndex+1)+' / '+previewImages.length:'';
-}
-
-async function usernameExists(username){
-  const snap=await getDoc(doc(db,'users',username));
-  return snap.exists();
-}
-
-function getAssignedCustomers(adminUsername,companyId){
-  const id=companyId+'_'+adminUsername;
-  if(Array.isArray(assignments[id]))return assignments[id];
-  const admin=allUsers.find(u=>userKey(u)===adminUsername&&companyOf(u)===companyId);
-  return Array.isArray(admin?.assignedCustomers)?admin.assignedCustomers:[];
-}
-
-function slug(s){
-  return String(s||'company').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'company';
-}
-
-function getDate(v){
-  if(v?.toDate)return v.toDate();
-  if(typeof v==='number')return new Date(v);
-  return new Date(v||Date.now());
-}
-
-function formatDate(v){
-  if(!v)return'-';
-  return getDate(v).toLocaleString([],{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-
-function esc(t){
-  return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function escAttr(t){
-  return esc(t);
-}
-</script>
-</body>
-</html>
+  const u=
