@@ -31,71 +31,16 @@ window.initialRequestsLoaded=false;
 $('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('backShift').onclick=showHome;$('backHours').onclick=showHome;$('backBol').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return}if(nextPanel)nextPanel()};$('bolFile').onchange=readBol;$('loginPassword').onkeydown=e=>{if(e.key==='Enter')login()};$('loginUsername').onkeydown=e=>{if(e.key==='Enter')login()};$('closeModalBtn').onclick=closeImagePreview;$('zoomInBtn').onclick=zoomInImage;$('zoomOutBtn').onclick=zoomOutImage;$('downloadImgBtn').onclick=downloadPreviewImage;$('prevImageBtn').onclick=showPrevImage;$('nextImageBtn').onclick=showNextImage;$('requestSearch').oninput=renderAdmin;$('editCancel').onclick=closeEditModal;$('editSave').onclick=saveEditModal;
 async function ensureTestCompany(){const c=await getDoc(doc(db,'companies','test_company'));if(!c.exists())await setDoc(doc(db,'companies','test_company'),{companyId:'test_company',name:'Test Company',superAdminUsername:'super',superAdminName:'Dalibor',createdAt:serverTimestamp()});}
 ensureTestCompany();
-window.lastRequestIds = window.lastRequestIds || new Set();
-
 onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{
-  const newRequests = snap.docs.map(d=>({id:d.id,...d.data()}));
-
-  if(window.initialRequestsLoaded && (user?.role==='admin' || user?.role==='super_admin')){
-    newRequests.forEach(r=>{
-      const isMyCompany = companyOf(r) === companyOf(user);
-      const adminCanSee = user.role==='super_admin' || getAssignedCustomers(userKey(user),companyOf(user)).includes(r.customerUsername);
-      if(r.status==='NEW' && isMyCompany && adminCanSee && !window.lastRequestIds.has(r.id)){
-        playNotificationSound();
-      }
-    });
-  }
-
-  window.lastRequestIds = new Set(newRequests.map(r=>r.id));
-  window.initialRequestsLoaded = true;
-  requests = newRequests;
-
-  if(user?.role==='customer') refreshCustomer();
-  if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin') renderAdmin();
+  requests=snap.docs.map(d=>({id:d.id,...d.data()}));
+  if(user?.role==='customer')refreshCustomer();
+  if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin')renderAdmin();
 },err=>alert('Firestore requests error: '+err.message));
 
-function unlockSound(){
-  try{
-    if(!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if(window.audioCtx.state === 'suspended') window.audioCtx.resume();
-    window.soundUnlocked = true;
-  }catch(e){console.log('unlock sound error',e)}
-}
-
-document.addEventListener('click', unlockSound, {once:true});
-
-function playNotificationSound(){
-  try{
-    unlockSound();
-    if(!window.audioCtx) return;
-
-    const now = window.audioCtx.currentTime;
-    const duration = 1.4;
-
-    const osc = window.audioCtx.createOscillator();
-    const gain = window.audioCtx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, now);
-    osc.frequency.setValueAtTime(660, now + 0.25);
-    osc.frequency.setValueAtTime(880, now + 0.50);
-    osc.frequency.setValueAtTime(660, now + 0.75);
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.5, now + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    osc.connect(gain);
-    gain.connect(window.audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + duration);
-  }catch(e){console.log('sound error', e)}
-}catch(e){console.log('sound error', e)}
-}
 onSnapshot(collection(db,'users'),snap=>{allUsers=snap.docs.map(d=>({id:d.id,...d.data()}));if(user&&user.role!=='full_admin'){const fresh=allUsers.find(u=>userKey(u)===userKey(user));if(fresh){user=fresh;localStorage.setItem('user',JSON.stringify(user));$('userInfo').innerText=(user.name||user.username)+' / '+user.role+' / '+getCompanyName(user.companyId)}}if(user?.role==='customer')refreshCustomer();if(user?.role==='super_admin'||user?.role==='full_admin')renderAdmin()},err=>alert('Firestore users error: '+err.message));
 onSnapshot(collection(db,'companies'),snap=>{companies=snap.docs.map(d=>({id:d.id,...d.data()}));if(user?.role==='full_admin')renderFullAdminPanel();if(user&&user.role!=='customer')renderAdmin()},err=>alert('Firestore companies error: '+err.message));
 onSnapshot(collection(db,'assignments'),snap=>{assignments={};snap.docs.forEach(d=>{assignments[d.id]=Array.isArray(d.data().customers)?d.data().customers:[]});if(user?.role==='admin'||user?.role==='super_admin')renderAdmin();if(selectedAssignAdmin)renderCustomerAssignList()},err=>alert('Firestore assignments error: '+err.message));
-async function login(){try{unlockSound();const username=$('loginUsername').value.trim(),password=$('loginPassword').value.trim();$('loginError').innerText='';if(!username){$('loginError').innerText='Enter username';return}if(username==='full_admin'&&password==='admin1234'){user={username:'full_admin',name:'Full Admin',role:'full_admin'};localStorage.setItem('user',JSON.stringify(user));$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText='Full Admin / main';showAdmin();renderFullAdminPanel();return}const snap=await getDoc(doc(db,'users',username));if(!snap.exists()){$('loginError').innerText='User not found';return}const data={id:snap.id,...snap.data()};if(data.role!=='customer'&&data.password!==password){$('loginError').innerText='Wrong password';return}if(!data.companyId)data.companyId='test_company';user=data;localStorage.setItem('user',JSON.stringify(user));$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText=(user.name||user.username)+' / '+user.role+' / '+getCompanyName(user.companyId);if(user.role==='customer')refreshCustomer();else showAdmin()}catch(err){$('loginError').innerText='Login error: '+err.message}}
+async function login(){try{const username=$('loginUsername').value.trim(),password=$('loginPassword').value.trim();$('loginError').innerText='';if(!username){$('loginError').innerText='Enter username';return}if(username==='full_admin'&&password==='admin1234'){user={username:'full_admin',name:'Full Admin',role:'full_admin'};localStorage.setItem('user',JSON.stringify(user));$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText='Full Admin / main';showAdmin();renderFullAdminPanel();return}const snap=await getDoc(doc(db,'users',username));if(!snap.exists()){$('loginError').innerText='User not found';return}const data={id:snap.id,...snap.data()};if(data.role!=='customer'&&data.password!==password){$('loginError').innerText='Wrong password';return}if(!data.companyId)data.companyId='test_company';user=data;localStorage.setItem('user',JSON.stringify(user));$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText=(user.name||user.username)+' / '+user.role+' / '+getCompanyName(user.companyId);if(user.role==='customer')refreshCustomer();else showAdmin()}catch(err){$('loginError').innerText='Login error: '+err.message}}
 function logout(){localStorage.removeItem('user');localStorage.removeItem('activeRequestId');location.reload()}const savedUser=localStorage.getItem('user');if(savedUser){try{user=JSON.parse(savedUser);$('loginScreen').style.display='none';$('logoutBtn').style.display='block';$('userInfo').innerText=(user.name||user.username)+' / '+user.role+(user.companyId?' / '+getCompanyName(user.companyId):'');if(user.role==='customer')refreshCustomer();else showAdmin()}catch(e){localStorage.removeItem('user')}}
 function hideAll(){['home','shiftPanel','hoursPanel','bolPanel','waiting','working','admin'].forEach(id=>$(id).style.display='none')}function showHome(){hideAll();pendingBol=null;nextPanel=null;$('bolFile').value='';$('bolPreview').style.display='none';$('home').style.display='grid'}function showAdmin(){hideAll();$('admin').style.display='block';$('roleBadge').innerText=user.role; if(user.role==='full_admin')renderFullAdminPanel(); else renderAdmin()}
 function companyOf(obj){return obj?.companyId||'test_company'}function getCompanyName(id){return companies.find(c=>c.id===id||c.companyId===id)?.name||(id==='test_company'?'Test Company':id||'')}function sameCompany(obj){return user?.role==='full_admin'||companyOf(obj)===companyOf(user)}function userKey(u){return u?.id||u?.username||''}function userLabel(u){return u?.name||u?.username||u?.id||''}
