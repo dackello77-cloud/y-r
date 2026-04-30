@@ -103,17 +103,22 @@ function openShift(){hideAll();const grid=$('shiftGrid');grid.innerHTML='';grid.
 async function uploadBolToStorage(type,value){
   if(!pendingBolBlob) return null;
 
-  const { getStorage, ref, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js");
-  const storage = getStorage(app);
+  try{
+    const { getStorage, ref, uploadBytes, getDownloadURL } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js");
+    const storage = getStorage(app);
 
-  const companyId=companyOf(user);
-  const safeUser=String(user.username||'customer').replace(/[^a-zA-Z0-9_-]/g,'_');
-  const safeType=String(type||'bol').replace(/[^a-zA-Z0-9_-]/g,'_');
-  const safeValue=String(value||'').replace(/[^a-zA-Z0-9_-]/g,'_');
-  const fileName=`bol/${companyId}/${safeUser}/${Date.now()}_${safeType}_${safeValue}.jpg`;
-  const fileRef=ref(storage,fileName);
-  await uploadBytes(fileRef,pendingBolBlob,{contentType:'image/jpeg'});
-  return await getDownloadURL(fileRef);
+    const companyId=companyOf(user);
+    const safeUser=String(user.username||'customer').replace(/[^a-zA-Z0-9_-]/g,'_');
+    const safeType=String(type||'bol').replace(/[^a-zA-Z0-9_-]/g,'_');
+    const safeValue=String(value||'').replace(/[^a-zA-Z0-9_-]/g,'_');
+    const fileName=`bol/${companyId}/${safeUser}/${Date.now()}_${safeType}_${safeValue}.jpg`;
+    const fileRef=ref(storage,fileName);
+    await uploadBytes(fileRef,pendingBolBlob,{contentType:'image/jpeg'});
+    return await getDownloadURL(fileRef);
+  }catch(err){
+    alert('BOL slika nije poslata u Storage. Proveri Firebase Storage rules. Greška: '+err.message);
+    throw err;
+  }
 }
 
 async function sendRequest(type,value){try{const existing=getCustomerTicket();const bolImageUrl=await uploadBolToStorage(type,value);const base={companyId:companyOf(user),customerUsername:user.username,customerName:user.name||user.username,type,value,status:'NEW',createdAt:serverTimestamp(),takenByName:null,takenByUsername:null,takenAt:null,doneByName:null,doneAt:null,bolImage:bolImageUrl||null};if(existing){await updateDoc(doc(db,'requests',existing.id),{...base,bolImage:bolImageUrl||existing.bolImage||null,messages:arrayUnion({sender:user.name||user.username,text:type+' '+value+' new request in same ticket',createdAt:Date.now(),bolImage:bolImageUrl||null})});if(user.bolRequired){await updateDoc(doc(db,'users',user.username),{bolRequired:false});user.bolRequired=false;localStorage.setItem('user',JSON.stringify(user))}activeId=existing.id;localStorage.setItem('activeRequestId',activeId);pendingBol=null;pendingBolBlob=null;refreshCustomer();return}const ref=await addDoc(collection(db,'requests'),{...base,messages:[{sender:user.name||user.username,text:type+' '+value+' request sent.',createdAt:Date.now(),bolImage:bolImageUrl||null}]});if(user.bolRequired){await updateDoc(doc(db,'users',user.username),{bolRequired:false});user.bolRequired=false;localStorage.setItem('user',JSON.stringify(user))}activeId=ref.id;localStorage.setItem('activeRequestId',activeId);pendingBol=null;pendingBolBlob=null;refreshCustomer()}catch(err){alert('Greška kod slanja requesta/BOL slike: '+err.message+'\nProbaj manju sliku ili slikaj malo dalje.')}}
