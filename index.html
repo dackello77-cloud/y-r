@@ -11,8 +11,8 @@
 <div class="header"><div><h1>Communicator</h1><span id="userInfo">Not logged in</span></div><button class="btn gray" id="logoutBtn" style="display:none">Logout</button></div>
 <div class="login" id="loginScreen"><div class="loginBox"><h2>Login</h2><input id="loginUsername" placeholder="Username"><input id="loginPassword" placeholder="Password / customer leave empty" type="password"><button class="btn blue" style="width:100%" id="loginBtn">Login</button><p id="loginError" class="error"></p></div></div>
 <section class="home" id="home"><div class="big shift" id="shiftBtn"></div><div class="big hours" id="hoursBtn"></div></section>
-<section class="panel" id="shiftPanel"><div class="panelTop"><h2></h2><button class="btn gray" id="backShift">Back</button></div><div class="grid" id="shiftGrid"></div></section>
-<section class="panel" id="hoursPanel"><div class="panelTop"><h2></h2><button class="btn gray" id="backHours">Back</button></div><div class="grid" id="hoursGrid"></div></section>
+<section class="panel" id="shiftPanel"><div class="panelTop"><h2>Choose SHIFT time</h2><button class="btn gray" id="backShift">Back</button></div><div class="grid" id="shiftGrid"></div></section>
+<section class="panel" id="hoursPanel"><div class="panelTop"><h2>Choose HOURS</h2><button class="btn gray" id="backHours">Back</button></div><div class="grid" id="hoursGrid"></div></section>
 <section class="panel" id="bolPanel"><div class="panelTop"><h2>BOL required</h2><button class="btn gray" id="backBol">Back</button></div><p class="line">Please take/upload a BOL photo before sending request.</p><input class="input" id="bolFile" type="file" accept="image/*" capture="environment"><img id="bolPreview" class="preview" style="display:none"><button class="btn blue" id="continueAfterBol">Continue</button></section>
 <section class="waiting" id="waiting"><div class="status"><h2>REQUEST SENT</h2><p id="requestText"></p><div class="timer" id="timer">00:00:00</div><p>Waiting for operator...</p></div></section>
 <section class="working" id="working"><div class="status"><h2>OPERATOR IS WORKING</h2><p id="workingText"></p><div class="timer" id="timerBlue">00:00:00</div><p>Please wait until operator finishes.</p></div></section>
@@ -28,7 +28,34 @@ let user=null,requests=[],allUsers=[],companies=[],assignments={},selectedId=nul
 $('loginBtn').onclick=login;$('logoutBtn').onclick=logout;$('shiftBtn').onclick=()=>checkBolThen(openShift);$('hoursBtn').onclick=()=>checkBolThen(openHours);$('backShift').onclick=showHome;$('backHours').onclick=showHome;$('backBol').onclick=showHome;$('continueAfterBol').onclick=()=>{if(!pendingBol){alert('Please add BOL photo.');return}if(nextPanel)nextPanel()};$('bolFile').onchange=readBol;$('loginPassword').onkeydown=e=>{if(e.key==='Enter')login()};$('loginUsername').onkeydown=e=>{if(e.key==='Enter')login()};$('closeModalBtn').onclick=closeImagePreview;$('zoomInBtn').onclick=zoomInImage;$('zoomOutBtn').onclick=zoomOutImage;$('downloadImgBtn').onclick=downloadPreviewImage;$('prevImageBtn').onclick=showPrevImage;$('nextImageBtn').onclick=showNextImage;$('requestSearch').oninput=renderAdmin;$('editCancel').onclick=closeEditModal;$('editSave').onclick=saveEditModal;
 async function ensureTestCompany(){const c=await getDoc(doc(db,'companies','test_company'));if(!c.exists())await setDoc(doc(db,'companies','test_company'),{companyId:'test_company',name:'Test Company',superAdminUsername:'super',superAdminName:'Dalibor',createdAt:serverTimestamp()});}
 ensureTestCompany();
-onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{requests=snap.docs.map(d=>({id:d.id,...d.data()}));if(user?.role==='customer')refreshCustomer();if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin')renderAdmin()},err=>alert('Firestore requests error: '+err.message));
+let lastRequestIds = new Set();
+
+onSnapshot(query(collection(db,'requests'),orderBy('createdAt','desc')),snap=>{
+  const newRequests = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // DETECT NEW REQUEST SOUND
+  if(user?.role==='admin' || user?.role==='super_admin'){
+    newRequests.forEach(r=>{
+      if(r.status==='NEW' && !lastRequestIds.has(r.id)){
+        playNotificationSound();
+      }
+    });
+  }
+
+  lastRequestIds = new Set(newRequests.map(r=>r.id));
+  requests = newRequests;
+
+  if(user?.role==='customer') refreshCustomer();
+  if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin') renderAdmin();
+},err=>alert('Firestore requests error: '+err.message));
+
+function playNotificationSound(){
+  try{
+    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+    audio.volume = 1;
+    audio.play();
+  }catch(e){console.log('sound error', e)}
+}
 onSnapshot(collection(db,'users'),snap=>{allUsers=snap.docs.map(d=>({id:d.id,...d.data()}));if(user&&user.role!=='full_admin'){const fresh=allUsers.find(u=>userKey(u)===userKey(user));if(fresh){user=fresh;localStorage.setItem('user',JSON.stringify(user));$('userInfo').innerText=(user.name||user.username)+' / '+user.role+' / '+getCompanyName(user.companyId)}}if(user?.role==='customer')refreshCustomer();if(user?.role==='super_admin'||user?.role==='full_admin')renderAdmin()},err=>alert('Firestore users error: '+err.message));
 onSnapshot(collection(db,'companies'),snap=>{companies=snap.docs.map(d=>({id:d.id,...d.data()}));if(user?.role==='full_admin')renderFullAdminPanel();if(user&&user.role!=='customer')renderAdmin()},err=>alert('Firestore companies error: '+err.message));
 onSnapshot(collection(db,'assignments'),snap=>{assignments={};snap.docs.forEach(d=>{assignments[d.id]=Array.isArray(d.data().customers)?d.data().customers:[]});if(user?.role==='admin'||user?.role==='super_admin')renderAdmin();if(selectedAssignAdmin)renderCustomerAssignList()},err=>alert('Firestore assignments error: '+err.message));
@@ -73,31 +100,4 @@ function getAssignedCustomers(adminUsername,companyId){
   const id=companyId+'_'+adminUsername;
   if(Array.isArray(assignments[id])) return assignments[id];
   const admin=allUsers.find(u=>userKey(u)===adminUsername&&companyOf(u)===companyId);
-  return Array.isArray(admin?.assignedCustomers)?admin.assignedCustomers:[];
-}
-
-function slug(s){
-  return String(s||'company').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'company';
-}
-
-function getDate(v){
-  if(v?.toDate)return v.toDate();
-  if(typeof v==='number')return new Date(v);
-  return new Date(v||Date.now());
-}
-
-function formatDate(v){
-  if(!v)return'-';
-  return getDate(v).toLocaleString([],{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-
-function esc(t){
-  return String(t||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-}
-
-function escAttr(t){
-  return esc(t).replace(/'/g,'&#39;');
-}
-</script>
-</body>
-</html>
+  re
