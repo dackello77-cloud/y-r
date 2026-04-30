@@ -20,12 +20,12 @@
 <section class="admin" id="admin"><div class="layout"><div class="box"><div class="boxHead"><h2>Requests</h2><span id="count">0</span></div><div style="padding:12px;border-bottom:1px solid #1f2937"><input class="input" id="requestSearch" placeholder="Search customer..."></div><div class="list" id="requestList"></div></div><div class="box"><div class="boxHead"><h2>Details</h2><span id="roleBadge"></span></div><div class="body" id="details">Select request.</div></div></div></section>
 <div class="modal" id="imageModal">
   <div class="modalBox">
-    <div class="modalControls hiddenPreviewControl">
-      <button id="zoomInBtn"></button>
-      <button id="zoomOutBtn"></button>
-      <button id="downloadImgBtn"></button>
-      <button id="closeModalBtn"></button>
-      <span id="imageCounter"></span>
+    <div class="modalControls" style="display:none">
+      <button class="btn blue" id="zoomInBtn">Zoom +</button>
+      <button class="btn gray" id="zoomOutBtn">Zoom -</button>
+      <button class="btn green" id="downloadImgBtn">Download</button>
+      <button class="btn redbtn" id="closeModalBtn">Close</button>
+      <span class="imageCounter" id="imageCounter"></span>
     </div>
 
     <div class="imageArea">
