@@ -51,7 +51,9 @@ async function deleteOldRequests(){
 deleteOldRequests();
 
 onSnapshot(query(collection(db,'requests'),where('createdAt','>=',tenDaysAgoTimestamp()),orderBy('createdAt','desc')),snap=>{
-  requests=snap.docs.map(d=>({id:d.id,...d.data()}));
+  requests = snap.docs
+  .map(d => ({id:d.id,...d.data()}))
+  .filter(r => r.status === 'NEW' || r.status === 'TAKEN');
   if(user?.role==='customer')refreshCustomer();
   if(user?.role==='admin'||user?.role==='super_admin'||user?.role==='full_admin')renderAdmin();
 },err=>alert('Firestore requests error: '+err.message));
