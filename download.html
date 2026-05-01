@@ -11,7 +11,7 @@ body {
     color: white;
     font-family: Arial;
     text-align: center;
-    padding-top: 100px;
+    padding-top: 80px;
 }
 
 .container {
@@ -20,7 +20,12 @@ body {
 }
 
 h1 {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+}
+
+.version {
+    color: #aaa;
+    margin-bottom: 25px;
 }
 
 .download-btn {
@@ -31,6 +36,7 @@ h1 {
     border: none;
     border-radius: 12px;
     cursor: pointer;
+    width: 100%;
 }
 
 .download-btn:hover {
@@ -42,6 +48,12 @@ h1 {
     font-size: 14px;
     color: #aaa;
 }
+
+.warning {
+    margin-top: 15px;
+    font-size: 13px;
+    color: #facc15;
+}
 </style>
 
 </head>
@@ -49,14 +61,19 @@ h1 {
 <body>
 
 <div class="container">
-    <h1>Comunicator App</h1>
+    <h1>Communicator App</h1>
+    <div class="version">Version 1.0</div>
 
-    <a href="https://github.com/dackello77-cloud/comunicator/releases/download/v1.0/app-debug.apk">
-        <button class="download-btn">📲 Download app</button>
+    <a href="https://github.com/dackello77-cloud/comunicator/releases/download/v1.0/app-debug.apk" download>
+        <button class="download-btn">📲 Download App</button>
     </a>
 
     <p class="note">
-        
+        Click the button to download and install the app.
+    </p>
+
+    <p class="warning">
+        ⚠ If install is blocked, enable "Install unknown apps" in your phone settings.
     </p>
 </div>
 
