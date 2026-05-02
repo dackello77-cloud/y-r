@@ -47,7 +47,7 @@ async function uploadToCloudinary(base64){
   formData.append("file",base64);
   formData.append("upload_preset","bol_upload");
   formData.append("folder","bol");
-  const res=await fetch("https://api.cloudinary.com/v1_1/doytl9fi/image/upload",{method:"POST",body:formData});
+  const res=await fetch("https://api.cloudinary.com/v1_1/doytl99fi/image/upload",{method:"POST",body:formData});
   const data=await res.json();
   if(!res.ok||!data.secure_url)throw new Error(data.error?.message||"Cloudinary upload failed");
   return data.secure_url.replace("/upload/","/upload/w_1200,q_auto/");
